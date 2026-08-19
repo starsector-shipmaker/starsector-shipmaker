@@ -200,7 +200,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <lombok.version>1.18.46</lombok.version>
-        <log4j.version>2.25.3</log4j.version>
+        <log4j.version>2.25.5</log4j.version>
         <ikonli.version>12.4.0</ikonli.version>
         <jackson.version>2.18.9</jackson.version>
         <flatlaf.version>3.7.2</flatlaf.version>
