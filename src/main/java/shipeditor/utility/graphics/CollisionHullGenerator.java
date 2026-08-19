@@ -1,6 +1,5 @@
 package shipeditor.utility.graphics;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.*;
@@ -42,16 +41,29 @@ public final class CollisionHullGenerator {
         int width = image.getWidth();
         int height = image.getHeight();
 
+        // Bulk-read all pixels in one native call (50-100× faster than per-pixel getRGB)
+        int[] rgbArray = new int[width * height];
+        image.getRGB(0, 0, width, height, rgbArray, 0, width);
+
+        // Build opaque pixel grid from bulk array
+        boolean[][] opaque = new boolean[height][width];
+        for (int y = 0; y < height; y++) {
+            int rowOffset = y * width;
+            for (int x = 0; x < width; x++) {
+                int alpha = (rgbArray[rowOffset + x] >> 24) & 0xff;
+                opaque[y][x] = alpha > ALPHA_THRESHOLD;
+            }
+        }
+
         // 1. Dilate opaque pixels to bridge any transparent gaps (e.g. split hulls)
-        Set<Point> dilatedPixels = getDilatedOpaquePixels(image, width, height, 3);
-        if (dilatedPixels.isEmpty()) return Collections.emptyList();
+        boolean[][] dilated = dilateGrid(opaque, width, height, 3);
 
         // 2. Find the blob closest to the center of the sprite
-        Set<Point> targetBlob = findCenterBlob(dilatedPixels, width, height);
-        if (targetBlob.isEmpty()) return Collections.emptyList();
+        boolean[][] blob = findCenterBlob(dilated, width, height);
+        if (blob == null) return Collections.emptyList();
 
         // 3. Trace boundary using Moore-Neighbor
-        List<Point> contour = traceBoundary(targetBlob, width, height);
+        List<int[]> contour = traceBoundary(blob, width, height);
         if (contour.isEmpty()) return Collections.emptyList();
 
         // 4. Simplify with RDP
@@ -61,37 +73,39 @@ public final class CollisionHullGenerator {
         List<Point2D> insetPoints = insetPolygon(simplified, 5.0);
 
         // Convert pixel coordinates (top-left origin) to canvas coordinates
-        List<Point2D> canvasBounds = new ArrayList<>();
         double anchorX = anchor != null ? anchor.getX() : 0.0;
         double anchorY = anchor != null ? anchor.getY() : 0.0;
+        List<Point2D> canvasBounds = new ArrayList<>(insetPoints.size());
         for (Point2D p : insetPoints) {
-            double canvasX = anchorX + p.getX();
-            double canvasY = anchorY + p.getY();
-            canvasBounds.add(new Point2D.Double(canvasX, canvasY));
+            canvasBounds.add(new Point2D.Double(anchorX + p.getX(), anchorY + p.getY()));
         }
         return canvasBounds;
     }
 
 
-    private static Set<Point> getDilatedOpaquePixels(BufferedImage image, int width, int height, int radius) {
-        Set<Point> opaquePixels = new HashSet<>();
+    /**
+     * Dilates the opaque grid by the given radius using a two-pass grid sweep.
+     * No Point objects are allocated.
+     */
+    private static boolean[][] dilateGrid(boolean[][] opaque, int width, int height, int radius) {
+        boolean[][] dilated = new boolean[height][width];
+        int radiusSq = radius * radius;
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (isOpaque(image, x, y)) {
-                    opaquePixels.add(new Point(x, y));
-                }
-            }
-        }
-        
-        Set<Point> dilated = new HashSet<>(opaquePixels);
-        for (Point p : opaquePixels) {
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dy = -radius; dy <= radius; dy++) {
-                    if (dx*dx + dy*dy <= radius*radius) { // Circular dilation
-                        int nx = p.x + dx;
-                        int ny = p.y + dy;
-                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                            dilated.add(new Point(nx, ny));
+                if (!opaque[y][x]) continue;
+                // Mark all cells within circular radius
+                int yMin = Math.max(0, y - radius);
+                int yMax = Math.min(height - 1, y + radius);
+                for (int ny = yMin; ny <= yMax; ny++) {
+                    int dyVal = ny - y;
+                    int dySq = dyVal * dyVal;
+                    int xMin = Math.max(0, x - radius);
+                    int xMax = Math.min(width - 1, x + radius);
+                    for (int nx = xMin; nx <= xMax; nx++) {
+                        int dxVal = nx - x;
+                        if (dxVal * dxVal + dySq <= radiusSq) {
+                            dilated[ny][nx] = true;
                         }
                     }
                 }
@@ -100,46 +114,61 @@ public final class CollisionHullGenerator {
         return dilated;
     }
 
-    private static Set<Point> findCenterBlob(Set<Point> pixels, int width, int height) {
-        Point center = new Point(width / 2, height / 2);
-        Point nearest = null;
-        double minDistanceSq = Double.MAX_VALUE;
+    /**
+     * Finds the blob closest to the center of the sprite using packed-int BFS.
+     * Returns a boolean[][] grid of the blob, or null if empty.
+     */
+    private static boolean[][] findCenterBlob(boolean[][] grid, int width, int height) {
+        int centerX = width / 2;
+        int centerY = height / 2;
 
-        for (Point p : pixels) {
-            double distSq = Math.pow(p.x - center.x, 2) + Math.pow(p.y - center.y, 2);
-            if (distSq < minDistanceSq) {
-                minDistanceSq = distSq;
-                nearest = p;
+        // Find the pixel in the grid nearest to center
+        int nearestX = -1;
+        int nearestY = -1;
+        long minDistSq = Long.MAX_VALUE;
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (!grid[y][x]) continue;
+                long dx = x - centerX;
+                long dy = y - centerY;
+                long distSq = dx * dx + dy * dy;
+                if (distSq < minDistSq) {
+                    minDistSq = distSq;
+                    nearestX = x;
+                    nearestY = y;
+                }
             }
         }
 
-        if (nearest == null) return new HashSet<>();
+        if (nearestX < 0) return null;
 
-        boolean[][] visited = new boolean[width][height];
-        Set<Point> blob = new HashSet<>();
-        Queue<Point> queue = new LinkedList<>();
-        
-        queue.add(nearest);
-        blob.add(nearest);
-        visited[nearest.x][nearest.y] = true;
+        // BFS using packed int queue (y * width + x) — zero object allocation
+        boolean[][] blob = new boolean[height][width];
+        int[] queue = new int[width * height];
+        int head = 0;
+        int tail = 0;
 
-        while (!queue.isEmpty()) {
-            Point p = queue.poll();
-            
+        int startPacked = nearestY * width + nearestX;
+        queue[tail++] = startPacked;
+        blob[nearestY][nearestX] = true;
+
+        while (head < tail) {
+            int packed = queue[head++];
+            int py = packed / width;
+            int px = packed % width;
+
             // 8-way connectivity for ships to avoid gaps in thin diagonal structures
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                int ny = py + dy;
+                if (ny < 0 || ny >= height) continue;
+                for (int dx = -1; dx <= 1; dx++) {
                     if (dx == 0 && dy == 0) continue;
-                    int nx = p.x + dx;
-                    int ny = p.y + dy;
-                    
-                    if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[nx][ny]) {
-                        Point neighbor = new Point(nx, ny);
-                        if (pixels.contains(neighbor)) {
-                            visited[nx][ny] = true;
-                            queue.add(neighbor);
-                            blob.add(neighbor);
-                        }
+                    int nx = px + dx;
+                    if (nx < 0 || nx >= width) continue;
+                    if (grid[ny][nx] && !blob[ny][nx]) {
+                        blob[ny][nx] = true;
+                        queue[tail++] = ny * width + nx;
                     }
                 }
             }
@@ -148,80 +177,87 @@ public final class CollisionHullGenerator {
         return blob;
     }
 
-    private static boolean isOpaque(BufferedImage image, int x, int y) {
-        int argb = image.getRGB(x, y);
-        int alpha = (argb >> 24) & 0xff;
-        return alpha > ALPHA_THRESHOLD;
-    }
-
-    private static List<Point> traceBoundary(Set<Point> blob, int width, int height) {
-        if (blob.isEmpty()) return Collections.emptyList();
-
-        // Find starting pixel (top-leftmost)
-        Point start = null;
+    /**
+     * Moore-Neighbor boundary tracing using direct grid lookups.
+     * Returns contour as list of [x, y] int pairs — no Point object allocation.
+     */
+    private static List<int[]> traceBoundary(boolean[][] blob, int width, int height) {
+        // Find starting pixel (top-leftmost) — first true cell in row-major order
+        int startX = -1;
+        int startY = -1;
+        outer:
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                Point p = new Point(x, y);
-                if (blob.contains(p)) {
-                    start = p;
-                    break;
+                if (blob[y][x]) {
+                    startX = x;
+                    startY = y;
+                    break outer;
                 }
             }
-            if (start != null) break;
         }
 
-        if (start == null) return Collections.emptyList();
+        if (startX < 0) return Collections.emptyList();
 
-        List<Point> contour = new ArrayList<>();
-        
+        List<int[]> contour = new ArrayList<>();
+
         // Directions: Clockwise from N
-        int[] dx = { 0, 1, 1, 1, 0, -1, -1, -1 };
-        int[] dy = { -1, -1, 0, 1, 1, 1, 0, -1 };
-        
-        Point current = start;
+        int[] dxDir = { 0, 1, 1, 1, 0, -1, -1, -1 };
+        int[] dyDir = { -1, -1, 0, 1, 1, 1, 0, -1 };
+
+        int curX = startX;
+        int curY = startY;
         int enterDir = 6; // West, since start is top-leftmost
 
-        Point second = null;
-        
+        int secondX = -1;
+        int secondY = -1;
+
+        int safetyLimit = width * height * 2;
+
         while (true) {
-            contour.add(current);
+            contour.add(new int[]{curX, curY});
             boolean found = false;
-            
+
             int checkDir = enterDir;
-            
+
             for (int i = 0; i < 8; i++) {
-                Point neighbor = new Point(current.x + dx[checkDir], current.y + dy[checkDir]);
-                
-                if (blob.contains(neighbor)) {
-                    current = neighbor;
+                int nx = curX + dxDir[checkDir];
+                int ny = curY + dyDir[checkDir];
+
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height && blob[ny][nx]) {
+                    curX = nx;
+                    curY = ny;
                     enterDir = (checkDir + 5) % 8; // Start searching next from relative "behind-left"
                     found = true;
                     break;
                 }
                 checkDir = (checkDir + 1) % 8;
             }
-            
+
             if (!found) {
                 break;
             }
-            
-            if (second == null) {
-                second = current;
-            } else if (contour.size() > 1 && contour.get(contour.size() - 1).equals(start) && current.equals(second)) {
-                contour.remove(contour.size() - 1);
-                break; // Jacob's stopping criterion met
+
+            if (secondX < 0) {
+                secondX = curX;
+                secondY = curY;
+            } else if (contour.size() > 1) {
+                int[] last = contour.get(contour.size() - 1);
+                if (last[0] == startX && last[1] == startY && curX == secondX && curY == secondY) {
+                    contour.remove(contour.size() - 1);
+                    break; // Jacob's stopping criterion met
+                }
             }
-            
-            if (contour.size() > width * height * 2) break; // Infinite loop safety
+
+            if (contour.size() > safetyLimit) break; // Infinite loop safety
         }
 
         return contour;
     }
 
-    private static List<Point2D> simplifyPolygon(List<Point> points, double epsilon) {
+    private static List<Point2D> simplifyPolygon(List<int[]> points, double epsilon) {
         if (points.size() < 3) {
             List<Point2D> res = new ArrayList<>();
-            for (Point p : points) res.add(new Point2D.Double(p.x, p.y));
+            for (int[] p : points) res.add(new Point2D.Double(p[0], p[1]));
             return res;
         }
 
@@ -229,8 +265,11 @@ public final class CollisionHullGenerator {
         int index = 0;
         int end = points.size() - 1;
 
+        int[] first = points.get(0);
+        int[] last = points.get(end);
+
         for (int i = 1; i < end; i++) {
-            double distance = perpendicularDistance(points.get(i), points.get(0), points.get(end));
+            double distance = perpendicularDistance(points.get(i), first, last);
             if (distance > maxDistance) {
                 index = i;
                 maxDistance = distance;
@@ -239,43 +278,43 @@ public final class CollisionHullGenerator {
 
         List<Point2D> result = new ArrayList<>();
         if (maxDistance > epsilon) {
-            List<Point> firstLine = points.subList(0, index + 1);
-            List<Point> secondLine = points.subList(index, end + 1);
-            
+            List<int[]> firstLine = points.subList(0, index + 1);
+            List<int[]> secondLine = points.subList(index, end + 1);
+
             List<Point2D> firstResult = simplifyPolygon(firstLine, epsilon);
             List<Point2D> secondResult = simplifyPolygon(secondLine, epsilon);
-            
+
             firstResult.remove(firstResult.size() - 1);
             result.addAll(firstResult);
             result.addAll(secondResult);
         } else {
-            result.add(new Point2D.Double(points.get(0).x, points.get(0).y));
-            result.add(new Point2D.Double(points.get(end).x, points.get(end).y));
+            result.add(new Point2D.Double(first[0], first[1]));
+            result.add(new Point2D.Double(last[0], last[1]));
         }
 
         return result;
     }
 
-    private static double perpendicularDistance(Point pt, Point lineStart, Point lineEnd) {
-        double dx = lineEnd.x - lineStart.x;
-        double dy = lineEnd.y - lineStart.y;
-        
+    private static double perpendicularDistance(int[] pt, int[] lineStart, int[] lineEnd) {
+        double dx = lineEnd[0] - lineStart[0];
+        double dy = lineEnd[1] - lineStart[1];
+
         if (dx == 0 && dy == 0) {
-            return Math.hypot(pt.x - lineStart.x, pt.y - lineStart.y);
+            return Math.hypot(pt[0] - lineStart[0], pt[1] - lineStart[1]);
         }
-        
-        double t = ((pt.x - lineStart.x) * dx + (pt.y - lineStart.y) * dy) / (dx * dx + dy * dy);
-        
+
+        double t = ((pt[0] - lineStart[0]) * dx + (pt[1] - lineStart[1]) * dy) / (dx * dx + dy * dy);
+
         if (t < 0) {
-            return Math.hypot(pt.x - lineStart.x, pt.y - lineStart.y);
+            return Math.hypot(pt[0] - lineStart[0], pt[1] - lineStart[1]);
         } else if (t > 1) {
-            return Math.hypot(pt.x - lineEnd.x, pt.y - lineEnd.y);
+            return Math.hypot(pt[0] - lineEnd[0], pt[1] - lineEnd[1]);
         }
-        
-        double closestX = lineStart.x + t * dx;
-        double closestY = lineStart.y + t * dy;
-        
-        return Math.hypot(pt.x - closestX, pt.y - closestY);
+
+        double closestX = lineStart[0] + t * dx;
+        double closestY = lineStart[1] + t * dy;
+
+        return Math.hypot(pt[0] - closestX, pt[1] - closestY);
     }
 
     private static List<Point2D> insetPolygon(List<Point2D> poly, double insetAmount) {

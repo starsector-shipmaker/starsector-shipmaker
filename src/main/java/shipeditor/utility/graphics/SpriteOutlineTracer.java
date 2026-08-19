@@ -1,6 +1,5 @@
 package shipeditor.utility.graphics;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.*;
@@ -45,70 +44,82 @@ public final class SpriteOutlineTracer {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        Set<Point> opaquePixels = new HashSet<>();
+        // Bulk-read all pixels in one native call (50-100× faster than per-pixel getRGB)
+        int[] rgbArray = new int[width * height];
+        image.getRGB(0, 0, width, height, rgbArray, 0, width);
+
+        // Build opaque pixel grid from bulk array
+        boolean[][] opaque = new boolean[height][width];
+        boolean hasOpaque = false;
         for (int y = 0; y < height; y++) {
+            int rowOffset = y * width;
             for (int x = 0; x < width; x++) {
-                if (isOpaque(image, x, y)) {
-                    opaquePixels.add(new Point(x, y));
+                int alpha = (rgbArray[rowOffset + x] >> 24) & 0xff;
+                if (alpha > ALPHA_THRESHOLD) {
+                    opaque[y][x] = true;
+                    hasOpaque = true;
                 }
             }
         }
 
-        if (opaquePixels.isEmpty()) return Collections.emptyList();
+        if (!hasOpaque) return Collections.emptyList();
 
-        List<Point> contour = traceBoundary(opaquePixels, width, height);
+        List<int[]> contour = traceBoundary(opaque, width, height);
         if (contour.isEmpty()) return Collections.emptyList();
 
         // Simplify slightly to eliminate staircase pixel artifacts while preserving exact sharp features
         return simplifyPolygon(contour, 1.0);
     }
 
-    private static boolean isOpaque(BufferedImage image, int x, int y) {
-        int argb = image.getRGB(x, y);
-        int alpha = (argb >> 24) & 0xff;
-        return alpha > ALPHA_THRESHOLD;
-    }
-
-    private static List<Point> traceBoundary(Set<Point> blob, int width, int height) {
-        if (blob.isEmpty()) return Collections.emptyList();
-
-        // Find starting pixel (top-leftmost)
-        Point start = null;
+    /**
+     * Moore-Neighbor boundary tracing using direct grid lookups.
+     * Returns contour as list of [x, y] int pairs — no Point object allocation.
+     */
+    private static List<int[]> traceBoundary(boolean[][] grid, int width, int height) {
+        // Find starting pixel (top-leftmost) — first true cell in row-major order
+        int startX = -1;
+        int startY = -1;
+        outer:
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                Point p = new Point(x, y);
-                if (blob.contains(p)) {
-                    start = p;
-                    break;
+                if (grid[y][x]) {
+                    startX = x;
+                    startY = y;
+                    break outer;
                 }
             }
-            if (start != null) break;
         }
 
-        if (start == null) return Collections.emptyList();
+        if (startX < 0) return Collections.emptyList();
 
-        List<Point> contour = new ArrayList<>();
+        List<int[]> contour = new ArrayList<>();
 
         // Directions: Clockwise from N
-        int[] dx = { 0, 1, 1, 1, 0, -1, -1, -1 };
-        int[] dy = { -1, -1, 0, 1, 1, 1, 0, -1 };
+        int[] dxDir = { 0, 1, 1, 1, 0, -1, -1, -1 };
+        int[] dyDir = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
-        Point current = start;
+        int curX = startX;
+        int curY = startY;
         int enterDir = 6; // West, since start is top-leftmost
 
-        Point second = null;
+        int secondX = -1;
+        int secondY = -1;
+
+        int safetyLimit = width * height * 2;
 
         while (true) {
-            contour.add(current);
+            contour.add(new int[]{curX, curY});
             boolean found = false;
 
             int checkDir = enterDir;
 
             for (int i = 0; i < 8; i++) {
-                Point neighbor = new Point(current.x + dx[checkDir], current.y + dy[checkDir]);
+                int nx = curX + dxDir[checkDir];
+                int ny = curY + dyDir[checkDir];
 
-                if (blob.contains(neighbor)) {
-                    current = neighbor;
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height && grid[ny][nx]) {
+                    curX = nx;
+                    curY = ny;
                     enterDir = (checkDir + 5) % 8;
                     found = true;
                     break;
@@ -120,23 +131,27 @@ public final class SpriteOutlineTracer {
                 break;
             }
 
-            if (second == null) {
-                second = current;
-            } else if (contour.size() > 1 && contour.get(contour.size() - 1).equals(start) && current.equals(second)) {
-                contour.remove(contour.size() - 1);
-                break; // Jacob's stopping criterion met
+            if (secondX < 0) {
+                secondX = curX;
+                secondY = curY;
+            } else if (contour.size() > 1) {
+                int[] last = contour.get(contour.size() - 1);
+                if (last[0] == startX && last[1] == startY && curX == secondX && curY == secondY) {
+                    contour.remove(contour.size() - 1);
+                    break; // Jacob's stopping criterion met
+                }
             }
 
-            if (contour.size() > width * height * 2) break; // Infinite loop safety
+            if (contour.size() > safetyLimit) break; // Infinite loop safety
         }
 
         return contour;
     }
 
-    private static List<Point2D> simplifyPolygon(List<Point> points, double epsilon) {
+    private static List<Point2D> simplifyPolygon(List<int[]> points, double epsilon) {
         if (points.size() < 3) {
             List<Point2D> res = new ArrayList<>();
-            for (Point p : points) res.add(new Point2D.Double(p.x, p.y));
+            for (int[] p : points) res.add(new Point2D.Double(p[0], p[1]));
             return res;
         }
 
@@ -144,8 +159,11 @@ public final class SpriteOutlineTracer {
         int index = 0;
         int end = points.size() - 1;
 
+        int[] first = points.get(0);
+        int[] last = points.get(end);
+
         for (int i = 1; i < end; i++) {
-            double distance = perpendicularDistance(points.get(i), points.get(0), points.get(end));
+            double distance = perpendicularDistance(points.get(i), first, last);
             if (distance > maxDistance) {
                 index = i;
                 maxDistance = distance;
@@ -154,8 +172,8 @@ public final class SpriteOutlineTracer {
 
         List<Point2D> result = new ArrayList<>();
         if (maxDistance > epsilon) {
-            List<Point> firstLine = points.subList(0, index + 1);
-            List<Point> secondLine = points.subList(index, end + 1);
+            List<int[]> firstLine = points.subList(0, index + 1);
+            List<int[]> secondLine = points.subList(index, end + 1);
 
             List<Point2D> firstResult = simplifyPolygon(firstLine, epsilon);
             List<Point2D> secondResult = simplifyPolygon(secondLine, epsilon);
@@ -164,32 +182,32 @@ public final class SpriteOutlineTracer {
             result.addAll(firstResult);
             result.addAll(secondResult);
         } else {
-            result.add(new Point2D.Double(points.get(0).x, points.get(0).y));
-            result.add(new Point2D.Double(points.get(end).x, points.get(end).y));
+            result.add(new Point2D.Double(first[0], first[1]));
+            result.add(new Point2D.Double(last[0], last[1]));
         }
 
         return result;
     }
 
-    private static double perpendicularDistance(Point pt, Point lineStart, Point lineEnd) {
-        double dx = lineEnd.x - lineStart.x;
-        double dy = lineEnd.y - lineStart.y;
+    private static double perpendicularDistance(int[] pt, int[] lineStart, int[] lineEnd) {
+        double dx = lineEnd[0] - lineStart[0];
+        double dy = lineEnd[1] - lineStart[1];
 
         if (dx == 0 && dy == 0) {
-            return Math.hypot(pt.x - lineStart.x, pt.y - lineStart.y);
+            return Math.hypot(pt[0] - lineStart[0], pt[1] - lineStart[1]);
         }
 
-        double t = ((pt.x - lineStart.x) * dx + (pt.y - lineStart.y) * dy) / (dx * dx + dy * dy);
+        double t = ((pt[0] - lineStart[0]) * dx + (pt[1] - lineStart[1]) * dy) / (dx * dx + dy * dy);
 
         if (t < 0) {
-            return Math.hypot(pt.x - lineStart.x, pt.y - lineStart.y);
+            return Math.hypot(pt[0] - lineStart[0], pt[1] - lineStart[1]);
         } else if (t > 1) {
-            return Math.hypot(pt.x - lineEnd.x, pt.y - lineEnd.y);
+            return Math.hypot(pt[0] - lineEnd[0], pt[1] - lineEnd[1]);
         }
 
-        double closestX = lineStart.x + t * dx;
-        double closestY = lineStart.y + t * dy;
+        double closestX = lineStart[0] + t * dx;
+        double closestY = lineStart[1] + t * dy;
 
-        return Math.hypot(pt.x - closestX, pt.y - closestY);
+        return Math.hypot(pt[0] - closestX, pt[1] - closestY);
     }
 }

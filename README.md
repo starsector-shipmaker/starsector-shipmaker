@@ -38,12 +38,12 @@ If you place the Ship Editor inside your **Starsector installation directory** (
 
 ---
 
-### Option 2: System Java 21 (For Standalone Setup Outside Game Directory)
-If you prefer running the editor in a custom folder outside the Starsector installation, install a **Java Runtime Environment (JRE) version 21**:
+### Option 2: System Java 17 (For Standalone Setup Outside Game Directory)
+If you prefer running the editor in a custom folder outside the Starsector installation, install a **Java Runtime Environment (JRE) version 17**:
 
-1. **Download JRE 21**:
-   * **[Eclipse Temurin (Adoptium) Java 21 Releases](https://adoptium.net/temurin/releases/?version=21)** — Select **JRE** package type (`.msi` for Windows, `.pkg` for macOS).
-   * **[Microsoft Build of OpenJDK 21](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-21)**.
+1. **Download JRE 17**:
+   * **[Eclipse Temurin (Adoptium) Java 17 Releases](https://adoptium.net/temurin/releases/?version=17)** — Select **JRE** package type (`.msi` for Windows, `.pkg` for macOS).
+   * **[Microsoft Build of OpenJDK 17](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)**.
 2. During installation, make sure **"Add to PATH"** or **"Set JAVA_HOME"** is checked.
 3. Run **`ship_editor.bat`** (Windows) or **`./ship_editor.sh`** (Linux/macOS).
 
@@ -51,7 +51,7 @@ If you prefer running the editor in a custom folder outside the Starsector insta
 
 ### Option 3: Portable Local JRE Setup
 If you want to run the editor outside the Starsector directory without installing Java system-wide:
-1. Download a Java 21 JRE `.zip` (Windows) or `.tar.gz` (Linux/macOS) archive from [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21).
+1. Download a Java 17 JRE `.zip` (Windows) or `.tar.gz` (Linux/macOS) archive from [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=17).
 2. Extract the archive directly into the application folder alongside `ship_editor.jar`.
 3. Rename the extracted folder to **`jre`**.
 4. Launch via **`ship_editor.bat`** or **`./ship_editor.sh`**, which will automatically detect and run from the local `jre` folder.

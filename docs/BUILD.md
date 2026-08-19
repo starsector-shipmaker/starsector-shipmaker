@@ -3,7 +3,7 @@
 If you wish to compile the project yourself, follow these instructions.
 
 ## Prerequisites
-- **Java Development Kit (JDK)**: JDK 17 or higher (JDK 21 recommended).
+- **Java Development Kit (JDK)**: JDK 17.
 - **Maven**: Ensure Maven is installed on your system.
 
 ## Compiling

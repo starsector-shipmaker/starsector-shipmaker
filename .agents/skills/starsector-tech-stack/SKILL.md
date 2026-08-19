@@ -21,7 +21,7 @@ This skill is organized as follows:
 | Component | Version | Notes |
 |---|---|---|
 | **Java** | Source target 17 (`maven.compiler.release=17`) | Requires JDK 17–21 to compile. Lombok 1.18.36 crashes on JDK 25 with `TypeTag :: UNKNOWN ExceptionInInitializerError`. |
-| **Maven** | 3.x | Build tool. **Fedora quirk**: Fedora's `mvn` wrapper ignores `update-alternatives` and reads `/etc/java/maven.conf`. Set `JAVA_HOME=/usr/lib/jvm/java-21-temurin-jdk` in `~/.mavenrc` to force Java 21. |
+| **Maven** | 3.x | Build tool. **Fedora quirk**: Fedora's `mvn` wrapper ignores `update-alternatives` and reads `/etc/java/maven.conf`. Set `JAVA_HOME=/usr/lib/jvm/java-17-temurin-jdk` in `~/.mavenrc` to force Java 17. |
 
 ### JVM Flags (Production)
 ```
