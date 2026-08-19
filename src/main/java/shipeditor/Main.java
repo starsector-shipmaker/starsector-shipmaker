@@ -8,6 +8,7 @@ import shipeditor.persistence.Settings;
 import shipeditor.persistence.SettingsManager;
 import shipeditor.persistence.database.DatabaseManager;
 import shipeditor.utility.Errors;
+import shipeditor.utility.Utility;
 import shipeditor.utility.text.StringConstants;
 import shipeditor.utility.UtilityEnums.Theme;
 import shipeditor.utility.themes.Themes;
@@ -64,8 +65,15 @@ public final class Main {
             log.info("Max memory available is {} MB, which is less than the 4 GB required.", maxMemory / (1024 * 1024));
         }
 
-        boolean isLinux = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("linux") || System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("nix");
-        if (isLinux) {
+        boolean isWindows = Utility.isWindows();
+        boolean isLinux = Utility.isLinux();
+
+        if (isWindows) {
+            if (!Boolean.getBoolean("sun.awt.noerasebackground") || !Boolean.getBoolean("sun.java2d.noddraw")) {
+                needsRelaunch = true;
+                log.info("Missing essential Windows UI properties for AWT/Swing compatibility.");
+            }
+        } else if (isLinux) {
             if (!Boolean.getBoolean("sun.awt.noerasebackground") || !Boolean.getBoolean("sun.java2d.noddraw")) {
                 needsRelaunch = true;
                 log.info("Missing essential Linux UI properties for AWT/Swing compatibility.");
@@ -81,7 +89,7 @@ public final class Main {
             try {
                 String javaHome = System.getProperty("java.home");
                 String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
-                if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("win")) {
+                if (isWindows) {
                     javaBin += ".exe";
                 }
 
@@ -213,13 +221,36 @@ public final class Main {
         }
     }
 
-    public static void main(String[] args) {
-        System.setProperty("org.lwjgl.opengl.contextAPI", "native");
+    public static void configurePlatformProperties() {
+        if (Utility.isWindows()) {
+            System.setProperty("sun.java2d.opengl", "false");
+            System.setProperty("sun.java2d.d3d", "false");
+            System.setProperty("sun.java2d.noddraw", "true");
+            System.setProperty("sun.awt.noerasebackground", "true");
+            System.setProperty("org.lwjgl.opengl.contextAPI", "native");
+        } else if (Utility.isLinux()) {
+            System.setProperty("sun.java2d.opengl", "false");
+            System.setProperty("sun.java2d.d3d", "false");
+            System.setProperty("sun.java2d.noddraw", "true");
+            System.setProperty("sun.awt.noerasebackground", "true");
+            System.setProperty("org.lwjgl.opengl.contextAPI", "native");
+        } else {
+            System.setProperty("sun.java2d.opengl", "false");
+            System.setProperty("sun.java2d.d3d", "false");
+            System.setProperty("sun.java2d.noddraw", "true");
+            System.setProperty("sun.awt.noerasebackground", "true");
+            System.setProperty("org.lwjgl.opengl.contextAPI", "native");
+        }
+
         try {
             org.lwjgl.system.Configuration.OPENGL_CONTEXT_API.set("native");
         } catch (Throwable ignored) {
             // In case LWJGL Configuration class is not yet on classloader
         }
+    }
+
+    public static void main(String[] args) {
+        configurePlatformProperties();
 
         checkAndRelaunch(args);
 
@@ -253,15 +284,7 @@ public final class Main {
             releaseApplicationLock();
         }, "ShipEditor-Shutdown-Hook"));
         
-        System.setProperty("sun.java2d.opengl", "false");
-        System.setProperty("sun.java2d.d3d", "false");
-        System.setProperty("sun.java2d.noddraw", "true");
-        System.setProperty("sun.awt.noerasebackground", "true");
-        System.setProperty("org.lwjgl.opengl.contextAPI", "native");
-        try {
-            org.lwjgl.system.Configuration.OPENGL_CONTEXT_API.set("native");
-        } catch (Throwable ignored) {
-        }
+        configurePlatformProperties();
         
         Locale.setDefault(Locale.US);
         SwingUtilities.invokeLater(() -> {
@@ -304,8 +327,7 @@ public final class Main {
         UIManager.put("TabbedPane.tabSeparatorsFullHeight", true);
         UIManager.put("SplitPane.dividerSize", 8);
         UIManager.put("SplitPane.oneTouchButtonSize", 10);
-        boolean isLinux = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("linux");
-        if (!isLinux) {
+        if (!Utility.isLinux()) {
             UIManager.put("TitlePane.useWindowDecorations", true);
         }
 

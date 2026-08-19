@@ -8,7 +8,7 @@ if exist "%~dp0ship_editor.jar" (
     cd /d "%~dp0"
 )
 
-set JVM_OPTS=-Xmx4g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
+set JVM_OPTS=-Xmx4g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true -Dsun.awt.noerasebackground=true -Dorg.lwjgl.opengl.contextAPI=native
 
 set "JAVA_EXE=java"
 for %%J in (

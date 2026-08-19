@@ -103,7 +103,7 @@ public final class PrimaryViewer extends JPanel implements LayerViewer {
         data.majorVersion = 3;
         data.minorVersion = 3;
         data.profile = GLData.Profile.CORE;
-        // data.samples = 4; // Anti-aliasing - disabled as it causes X11 GLX pixel format selection failures on many Linux drivers
+        data.swapInterval = 0; // Explicitly 0 to prevent WGL VSync blocking on Windows EDT
 
         glCanvas = new AWTGLCanvas(data) {
             @Override
@@ -145,7 +145,9 @@ public final class PrimaryViewer extends JPanel implements LayerViewer {
                 } catch (Throwable t) {
                     log.error("Error during OpenGL painting!", t);
                 } finally {
-                    java.awt.Toolkit.getDefaultToolkit().sync();
+                    if (shipeditor.utility.Utility.isLinux()) {
+                        java.awt.Toolkit.getDefaultToolkit().sync();
+                    }
                 }
             }
         };
@@ -190,6 +192,9 @@ public final class PrimaryViewer extends JPanel implements LayerViewer {
         if (this.paintOrderController != null) {
             this.paintOrderController.queueRepaint();
         }
+    }
+
+    public void renderImmediately() {
         if (glCanvas != null && glCanvas.isDisplayable()) {
             glCanvas.render();
         }

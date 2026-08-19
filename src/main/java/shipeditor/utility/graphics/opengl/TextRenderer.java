@@ -15,10 +15,12 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class TextRenderer {
+
+    private static final int MAX_CACHE_SIZE = 256;
 
     private static class TextTexture {
         int textureId;
@@ -26,7 +28,18 @@ public final class TextRenderer {
         int height;
     }
 
-    private static final Map<String, TextTexture> textTextureCache = new HashMap<>();
+    private static final Map<String, TextTexture> textTextureCache = new LinkedHashMap<>(64, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, TextTexture> eldest) {
+            if (size() > MAX_CACHE_SIZE) {
+                if (eldest.getValue() != null && eldest.getValue().textureId != 0) {
+                    org.lwjgl.opengl.GL11.glDeleteTextures(eldest.getValue().textureId);
+                }
+                return true;
+            }
+            return false;
+        }
+    };
 
     private TextRenderer() {
     }

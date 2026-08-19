@@ -82,7 +82,11 @@ public class PaintOrderController implements OpenGLPainter {
 
     private void repaintViewer() {
         this.repaintQueued = false;
-        parent.repaint();
+        if (parent.getGlCanvas() != null && parent.getGlCanvas().isDisplayable()) {
+            parent.getGlCanvas().render();
+        } else {
+            parent.repaint();
+        }
     }
 
     // We pass w and h because some painters need to know the screen size

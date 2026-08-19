@@ -51,6 +51,23 @@ public final class Utility {
      */
     private Utility() {}
 
+    private static final String OS_NAME = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+    private static final boolean IS_WINDOWS = OS_NAME.contains("win");
+    private static final boolean IS_LINUX = OS_NAME.contains("linux") || OS_NAME.contains("nix");
+    private static final boolean IS_MAC = OS_NAME.contains("mac");
+
+    public static boolean isWindows() {
+        return IS_WINDOWS;
+    }
+
+    public static boolean isLinux() {
+        return IS_LINUX;
+    }
+
+    public static boolean isMac() {
+        return IS_MAC;
+    }
+
     public static int parseIntegerOrDefault(String value, int defaultValue) {
         if (value == null || value.trim().isEmpty()) return defaultValue;
         try {
