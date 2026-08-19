@@ -27,7 +27,7 @@ LOG_DIR="$APP_DIR/logs"
 LOG_FILE="$LOG_DIR/ship_editor.log"
 LAUNCH_LOG="$LOG_DIR/ship_editor_launcher.log"
 
-JVM_OPTS="-Xmx4g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 -Dorg.lwjgl.opengl.contextAPI=native -Dsun.awt.noerasebackground=true -Dsun.java2d.noddraw=true"
+JVM_OPTS="-Xmx4g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true -Dsun.awt.noerasebackground=true -Dorg.lwjgl.opengl.contextAPI=native"
 
 # Locate JRE
 find_java() {
