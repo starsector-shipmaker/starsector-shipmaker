@@ -248,13 +248,13 @@ public class WeaponPropertiesPanel extends AbstractWeaponPropertiesPanel {
         int row = firingLogicHandler.populate(content, 0);
 
         // Misc checkboxes from old WeaponDataPanel
-        showDamageWhenDecorativeCheckbox = WeaponFirePanelUtilities.createCheckBox("Show Damage When Decorative", readinessChecker, value -> {
+        showDamageWhenDecorativeCheckbox = WeaponFirePanelUtilities.createCheckBox("Show Damage When Decorative", "Show damage state even when slot is decorative", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setShowDamageWhenDecorative(value);
         }, onChange);
         ComponentUtilities.addLabelAndComponent(content, new JLabel(), showDamageWhenDecorativeCheckbox, row++);
 
-        passThroughMissilesCheckbox = WeaponFirePanelUtilities.createCheckBox("Pass Through Missiles", readinessChecker, value -> {
+        passThroughMissilesCheckbox = WeaponFirePanelUtilities.createCheckBox("Pass Through Missiles", "Projectiles from this weapon pass through missiles", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setPassThroughMissiles(value);
         }, onChange);

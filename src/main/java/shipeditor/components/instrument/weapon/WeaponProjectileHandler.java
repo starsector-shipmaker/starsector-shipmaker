@@ -17,12 +17,13 @@ public class WeaponProjectileHandler {
     private final JComboBox<AnimationType> animationTypeSelector;
 
     public WeaponProjectileHandler(Supplier<Boolean> readinessChecker, Runnable onChange, Supplier<WeaponSpecFile> specSupplier) {
-        projectileSpecIdEditor = WeaponFirePanelUtilities.createTextField(readinessChecker, value -> {
+        projectileSpecIdEditor = WeaponFirePanelUtilities.createTextField("ID of the projectile or beam spec (defined in projectile/beam files).", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setProjectileSpecId(value);
         }, onChange);
 
         barrelModeSelector = new JComboBox<>(BarrelMode.values());
+        barrelModeSelector.setToolTipText("Determines how the weapon fires from multiple barrels: ALTERNATING, LINKED, etc.");
         barrelModeSelector.addActionListener(e -> {
             if (readinessChecker.get()) {
                 WeaponSpecFile spec = specSupplier.get();
@@ -37,6 +38,7 @@ public class WeaponProjectileHandler {
         });
 
         animationTypeSelector = new JComboBox<>(AnimationType.values());
+        animationTypeSelector.setToolTipText("Determines the firing animation type: MUZZLE_FLASH, SMOKE, NONE, etc.");
         animationTypeSelector.addActionListener(e -> {
             if (readinessChecker.get()) {
                 WeaponSpecFile spec = specSupplier.get();

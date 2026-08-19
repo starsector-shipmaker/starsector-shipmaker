@@ -30,6 +30,8 @@ public class ShipHull {
 
     private String hullName;
 
+    private String styleID;
+
     private HullStyle hullStyle;
 
     private HullSize hullSize;
@@ -43,6 +45,13 @@ public class ShipHull {
     private int viewOffset;
 
     private String hullFileName;
+
+    public void setHullStyle(HullStyle style) {
+        this.hullStyle = style;
+        if (style != null) {
+            this.styleID = style.getHullStyleID();
+        }
+    }
 
     public void initialize(HullSpecFile specFile) {
         if (specFile == null) {
@@ -89,7 +98,7 @@ public class ShipHull {
     }
 
     private void loadHullStyle(HullSpecFile specFile) {
-        var styleID = specFile.getStyle();
+        this.styleID = specFile.getStyle();
         this.hullStyle = GameDataRepository.fetchStyleByID(styleID);
     }
 

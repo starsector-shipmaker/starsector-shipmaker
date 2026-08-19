@@ -154,6 +154,23 @@ public class WeaponFilterPanel extends JPanel {
         this.add(opCostCombo, gbc);
 
         gbc.gridy = 9;
+        JButton clearButton = new JButton("Clear Filters");
+        clearButton.addActionListener(e -> {
+            filterBySlotBox.setSelected(false);
+            filterBySelectedSlot = false;
+            techCombo.setSelectedIndex(0);
+            typeCombo.setSelectedIndex(0);
+            sizeCombo.setSelectedIndex(0);
+            opCostCombo.setSelectedIndex(0);
+            selectedTech = null;
+            selectedType = null;
+            selectedSize = null;
+            selectedOPCost = null;
+            applyFilters();
+        });
+        this.add(clearButton, gbc);
+        
+        gbc.gridy = 10;
         gbc.weighty = 1.0;
         this.add(new JPanel(), gbc);
         

@@ -30,47 +30,47 @@ public class WeaponSmokeHandler {
     }
 
     public WeaponSmokeHandler(Supplier<Boolean> readinessChecker, Runnable onChange, Supplier<WeaponSpecFile> specSupplier) {
-        smokeParticleSizeMinEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeParticleSizeMinEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setParticleSizeMin(value);
         }, onChange);
 
-        smokeParticleSizeRangeEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeParticleSizeRangeEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setParticleSizeRange(value);
         }, onChange);
 
-        smokeCloudParticleCountEditor = WeaponFirePanelUtilities.createIntField(readinessChecker, value -> {
+        smokeCloudParticleCountEditor = WeaponFirePanelUtilities.createIntField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setCloudParticleCount(value);
         }, onChange);
 
-        smokeCloudDurationEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeCloudDurationEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setCloudDuration(value);
         }, onChange);
 
-        smokeCloudRadiusEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeCloudRadiusEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setCloudRadius(value);
         }, onChange);
 
-        smokeBlowbackParticleCountEditor = WeaponFirePanelUtilities.createIntField(readinessChecker, value -> {
+        smokeBlowbackParticleCountEditor = WeaponFirePanelUtilities.createIntField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setBlowbackParticleCount(value);
         }, onChange);
 
-        smokeBlowbackDurationEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeBlowbackDurationEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setBlowbackDuration(value);
         }, onChange);
 
-        smokeBlowbackLengthEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeBlowbackLengthEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setBlowbackLength(value);
         }, onChange);
 
-        smokeBlowbackSpreadEditor = WeaponFirePanelUtilities.createDoubleField(readinessChecker, value -> {
+        smokeBlowbackSpreadEditor = WeaponFirePanelUtilities.createDoubleField(null, readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) getOrCreate(spec).setBlowbackSpread(value);
         }, onChange);
@@ -93,15 +93,15 @@ public class WeaponSmokeHandler {
     public int populate(JPanel panel, int startRow) {
         int row = startRow;
         ComponentUtilities.addLabelAndComponent(panel, new JLabel("<html><b>Smoke</b></html>"), new JLabel(""), row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Particle Size Min:"), smokeParticleSizeMinEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Particle Size Range:"), smokeParticleSizeRangeEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Particle Size Min (px):"), smokeParticleSizeMinEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Particle Size Range (px):"), smokeParticleSizeRangeEditor, row++);
         ComponentUtilities.addLabelAndComponent(panel, new JLabel("Cloud Particle Count:"), smokeCloudParticleCountEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Cloud Duration:"), smokeCloudDurationEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Cloud Radius:"), smokeCloudRadiusEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Cloud Duration (s):"), smokeCloudDurationEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Cloud Radius (px):"), smokeCloudRadiusEditor, row++);
         ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Particle Count:"), smokeBlowbackParticleCountEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Duration:"), smokeBlowbackDurationEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Length:"), smokeBlowbackLengthEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Spread:"), smokeBlowbackSpreadEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Duration (s):"), smokeBlowbackDurationEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Length (px):"), smokeBlowbackLengthEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Blowback Spread (px):"), smokeBlowbackSpreadEditor, row++);
         ComponentUtilities.addLabelAndComponent(panel, colorLabel, smokeParticleColorValue, row++);
         return row;
     }

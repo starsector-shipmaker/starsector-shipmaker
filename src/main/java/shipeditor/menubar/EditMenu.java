@@ -105,6 +105,13 @@ class EditMenu extends JMenu {
         snappingMenu.add(toggleRotationRounding);
 
         this.add(snappingMenu);
+
+        this.addSeparator();
+
+        JMenuItem slotDefaults = new JMenuItem("Weapon Slot Creation Defaults...");
+        slotDefaults.setIcon(FontIcon.of(BoxiconsRegular.PLUS_CIRCLE, 16, Themes.getIconColor()));
+        slotDefaults.addActionListener(e -> shipeditor.utility.components.dialog.DialogUtilities.showSlotCreationDialog());
+        this.add(slotDefaults);
     }
 
     private JMenu createPointSelectionModeOptions() {

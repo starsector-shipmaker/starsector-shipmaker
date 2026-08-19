@@ -220,8 +220,8 @@ class WeaponGroupTableDialog extends JPanel {
             super(model);
 
             Dimension preferredSize = this.getPreferredSize();
-            int width = Math.min(preferredSize.width, 400);
-            int height = Math.min(preferredSize.height, 300);
+            int width = Math.max(preferredSize.width, 600);
+            int height = Math.max(preferredSize.height, 400);
 
             this.setPreferredScrollableViewportSize(new Dimension(width, height));
 

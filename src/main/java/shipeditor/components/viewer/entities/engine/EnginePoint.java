@@ -121,11 +121,17 @@ public class EnginePoint extends AngledPoint implements EngineData {
             return this.skinOverride.getStyle();
         }
         if (style != null) return style;
-        GameDataRepository gameData = SettingsManager.getGameData();
-        Map<String, EngineStyle> allEngineStyles = gameData.getAllEngineStyles();
-        if (allEngineStyles != null) {
-            EngineStyle engineStyle = allEngineStyles.get(styleID);
-            this.setStyle(engineStyle);
+        if (styleID != null) {
+            GameDataRepository gameData = SettingsManager.getGameData();
+            if (gameData != null) {
+                Map<String, EngineStyle> allEngineStyles = gameData.getAllEngineStyles();
+                if (allEngineStyles != null) {
+                    EngineStyle engineStyle = allEngineStyles.get(styleID);
+                    if (engineStyle != null) {
+                        this.setStyle(engineStyle);
+                    }
+                }
+            }
         }
         return style;
     }

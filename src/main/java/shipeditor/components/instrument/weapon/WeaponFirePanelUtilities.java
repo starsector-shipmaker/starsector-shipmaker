@@ -20,9 +20,10 @@ import java.util.function.Supplier;
 
 public class WeaponFirePanelUtilities {
 
-    public static JTextField createTextField(Supplier<Boolean> readinessChecker, Consumer<String> setter, Runnable onChange) {
+    public static JTextField createTextField(String tooltip, Supplier<Boolean> readinessChecker, Consumer<String> setter, Runnable onChange) {
         JTextField textField = new JTextField();
         textField.setColumns(10);
+        if (tooltip != null) textField.setToolTipText(tooltip);
         textField.addActionListener(e -> {
             if (readinessChecker.get()) {
                 setter.accept(textField.getText());
@@ -32,9 +33,10 @@ public class WeaponFirePanelUtilities {
         return textField;
     }
 
-    public static JTextField createDoubleField(Supplier<Boolean> readinessChecker, Consumer<Double> setter, Runnable onChange) {
+    public static JTextField createDoubleField(String tooltip, Supplier<Boolean> readinessChecker, Consumer<Double> setter, Runnable onChange) {
         JTextField textField = new JTextField();
         textField.setColumns(10);
+        if (tooltip != null) textField.setToolTipText(tooltip);
         textField.addActionListener(e -> {
             if (readinessChecker.get()) {
                 try {
@@ -48,9 +50,10 @@ public class WeaponFirePanelUtilities {
         return textField;
     }
 
-    public static JTextField createIntField(Supplier<Boolean> readinessChecker, Consumer<Integer> setter, Runnable onChange) {
+    public static JTextField createIntField(String tooltip, Supplier<Boolean> readinessChecker, Consumer<Integer> setter, Runnable onChange) {
         JTextField textField = new JTextField();
         textField.setColumns(10);
+        if (tooltip != null) textField.setToolTipText(tooltip);
         textField.addActionListener(e -> {
             if (readinessChecker.get()) {
                 try {
@@ -64,8 +67,9 @@ public class WeaponFirePanelUtilities {
         return textField;
     }
 
-    public static JCheckBox createCheckBox(String text, Supplier<Boolean> readinessChecker, Consumer<Boolean> setter, Runnable onChange) {
+    public static JCheckBox createCheckBox(String text, String tooltip, Supplier<Boolean> readinessChecker, Consumer<Boolean> setter, Runnable onChange) {
         JCheckBox checkBox = new JCheckBox(text);
+        if (tooltip != null) checkBox.setToolTipText(tooltip);
         checkBox.addActionListener(e -> {
             if (readinessChecker.get()) {
                 setter.accept(checkBox.isSelected());
@@ -95,6 +99,7 @@ public class WeaponFirePanelUtilities {
         colorChooserMenu.add(removeColor);
 
         label.addMouseListener(new MouseoverLabelListener(colorChooserMenu, label));
+        valueLabel.addMouseListener(new MouseoverLabelListener(colorChooserMenu, valueLabel));
         Insets insets = ComponentUtilities.createLabelInsets();
         insets.top = 1;
         label.setBorder(ComponentUtilities.createLabelSimpleBorder(insets));

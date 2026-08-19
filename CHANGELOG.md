@@ -66,6 +66,9 @@
   - Optimize projectile rendering using instance-based painting, standardize missile render logic, and encapsulate `LayerPainter` fields.
 
 ### Bug Fixes & Null Safety
+- **Serialization Robustness**: Fix critical hull serialization crash (`Engine misconfiguration at hull serialization`) caused by strict engine style lookups. Ensure `SaveHullAction` safely writes raw `styleID` strings back to `.ship` files even when custom styles are unindexed or missing from memory.
+- **Weapon UI Polish**: Enhance weapon instrument panels with refined dimensions, improved button disabling states, descriptive tooltips, and a "Clear Filters" button in the tree view.
+- **Slot Creation Workflow**: Refactor the slot creation tab into a standalone pop-up modal (`SlotCreationDialog`) for configuring default weapon slot values, accessible via the slot panel and the `Edit` menu.
 - **Double-Click & Drag-and-Drop Loading**: Fix broken double-click layer loading by switching from `mouseClicked` to `mousePressed` in `JTree` listeners. Fix drag-and-drop by unwrapping `IndexedFile` in `TreeDataGestureListener`. (`474fbc8f`)
 - **Weapon Spec Null Safety**: Add null-safety guards in `WeaponCSVEntry.getSpecFile()` and `getLazyType()` to prevent NPEs when weapon spec files are missing or unparseable. (`ced1d1c8`)
 - **Automated Tree Reloading**: Add `ComponentListener` to `DataTreePanel` that triggers `queueReload()` when the panel first becomes visible, ensuring trees populate without manual user action. (`ced1d1c8`)

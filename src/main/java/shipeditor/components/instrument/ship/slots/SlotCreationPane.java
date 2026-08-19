@@ -3,6 +3,7 @@ import shipeditor.components.ComponentEnums.SlotCreationMode;
 
 
 import lombok.Getter;
+import lombok.Setter;
 import shipeditor.representation.weapon.WeaponEnums.WeaponMount;
 import shipeditor.representation.weapon.WeaponEnums.WeaponSize;
 import shipeditor.representation.weapon.WeaponEnums.WeaponType;
@@ -34,25 +35,25 @@ import shipeditor.utility.themes.Themes;
 
 public class SlotCreationPane extends JPanel {
 
-    @Getter
+    @Getter @Setter
     private static WeaponType defaultType = WeaponType.BALLISTIC;
 
-    @Getter
+    @Getter @Setter
     private static WeaponMount defaultMount = WeaponMount.TURRET;
 
-    @Getter
+    @Getter @Setter
     private static WeaponSize defaultSize = WeaponSize.SMALL;
 
-    @Getter
+    @Getter @Setter
     private static double defaultAngle;
 
-    @Getter
+    @Getter @Setter
     private static double defaultArc;
 
-    @Getter
+    @Getter @Setter
     private static SlotCreationMode mode = SlotCreationMode.BY_DEFAULT;
 
-    SlotCreationPane() {
+    public SlotCreationPane() {
         this.setLayout(new BorderLayout());
 
         this.add(SlotCreationPane.createModePanel(), BorderLayout.PAGE_START);
@@ -69,6 +70,7 @@ public class SlotCreationPane extends JPanel {
         selectorsPane.add(Box.createVerticalGlue());
 
         JScrollPane scrollContainer = new JScrollPane(selectorsPane);
+        scrollContainer.setBorder(new EmptyBorder(0, 0, 0, 0));
         JScrollBar verticalScrollBar = scrollContainer.getVerticalScrollBar();
         verticalScrollBar.setUnitIncrement(12);
 
@@ -91,13 +93,20 @@ public class SlotCreationPane extends JPanel {
         ButtonGroup selectorButtons = new ButtonGroup();
 
         JRadioButton fromClosestSlot = new JRadioButton("From closest slot");
+        fromClosestSlot.setToolTipText("New slots inherit type, mount, size, angle, and arc from the nearest slot");
         fromClosestSlot.addActionListener(e -> mode = SlotCreationMode.BY_CLOSEST);
         container.add(SlotCreationPane.createSlotKindPane(selectorButtons, fromClosestSlot));
 
         JRadioButton fromPanelDefaults = new JRadioButton("From panel defaults");
+        fromPanelDefaults.setToolTipText("New slots use the configured default parameters below");
         fromPanelDefaults.addActionListener(e -> mode = SlotCreationMode.BY_DEFAULT);
         container.add(SlotCreationPane.createSlotKindPane(selectorButtons, fromPanelDefaults));
-        fromPanelDefaults.setSelected(true);
+        
+        if (mode == SlotCreationMode.BY_CLOSEST) {
+            fromClosestSlot.setSelected(true);
+        } else {
+            fromPanelDefaults.setSelected(true);
+        }
 
         return container;
     }
@@ -107,10 +116,10 @@ public class SlotCreationPane extends JPanel {
         container.setLayout(new GridBagLayout());
 
         Spinners.addLabelWithDegreeSpinner(container, "Default angle:",
-                aDouble -> defaultAngle = aDouble, 0);
+                defaultAngle, aDouble -> defaultAngle = aDouble, 0);
 
         Spinners.addLabelWithDegreeSpinner(container, "Default arc:",
-                aDouble -> defaultArc = aDouble, 1);
+                defaultArc, aDouble -> defaultArc = aDouble, 1);
 
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new BorderLayout());

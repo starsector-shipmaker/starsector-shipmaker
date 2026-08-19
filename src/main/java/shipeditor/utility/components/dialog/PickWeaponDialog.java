@@ -149,7 +149,7 @@ class PickWeaponDialog extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(weaponList);
-        scrollPane.setPreferredSize(new Dimension(350, 400));
+        scrollPane.setPreferredSize(new Dimension(500, 500));
         
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);

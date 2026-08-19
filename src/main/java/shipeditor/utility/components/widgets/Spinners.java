@@ -26,8 +26,14 @@ public final class Spinners {
      */
     public static void addLabelWithDegreeSpinner(JPanel container, String labelText,
                                                  Consumer<Double> spinnerEffect, int y) {
-        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(0,
-                0, 360, 0.5d);
+        Spinners.addLabelWithDegreeSpinner(container, labelText, 0.0, spinnerEffect, y);
+    }
+
+    public static void addLabelWithDegreeSpinner(JPanel container, String labelText,
+                                                 double initialValue,
+                                                 Consumer<Double> spinnerEffect, int y) {
+        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(initialValue,
+                0.0, 360.0, 0.5d);
         Spinners.addLabelWithSpinner(container, labelText, spinnerEffect, spinnerNumberModel, y);
     }
 

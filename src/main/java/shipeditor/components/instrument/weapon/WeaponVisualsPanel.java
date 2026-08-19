@@ -178,18 +178,21 @@ public class WeaponVisualsPanel extends AbstractWeaponPropertiesPanel {
             if (cachedLayer != null && cachedLayer.getSpecFile() != null)
                 cachedLayer.getSpecFile().setRenderBelowAllWeapons(value);
         });
+        renderBelowWeaponsCheckbox.setToolTipText("Render this weapon below all other weapons (useful for decorative parts)");
         ComponentUtilities.addLabelAndComponent(content, new JLabel(), renderBelowWeaponsCheckbox, row++);
 
         renderAboveWeaponsCheckbox = createCheckBox("Render Above All Weapons", value -> {
             if (cachedLayer != null && cachedLayer.getSpecFile() != null)
                 cachedLayer.getSpecFile().setRenderAboveAllWeapons(value);
         });
+        renderAboveWeaponsCheckbox.setToolTipText("Render this weapon above all other weapons");
         ComponentUtilities.addLabelAndComponent(content, new JLabel(), renderAboveWeaponsCheckbox, row++);
 
         renderAdditiveCheckbox = createCheckBox("Render Additive", value -> {
             if (cachedLayer != null && cachedLayer.getSpecFile() != null)
                 cachedLayer.getSpecFile().setRenderAdditive(value);
         });
+        renderAdditiveCheckbox.setToolTipText("Render this weapon with additive blending (useful for energy weapons and glows)");
         ComponentUtilities.addLabelAndComponent(content, new JLabel(), renderAdditiveCheckbox, row++);
 
         return new CollapsibleSection("Render Flags", content);
@@ -261,6 +264,7 @@ public class WeaponVisualsPanel extends AbstractWeaponPropertiesPanel {
             if (cachedLayer != null && cachedLayer.getSpecFile() != null)
                 cachedLayer.getSpecFile().setAlwaysAnimate(value);
         });
+        alwaysAnimateCheckbox.setToolTipText("Always play the animation, even when not firing");
         ComponentUtilities.addLabelAndComponent(content, new JLabel(), alwaysAnimateCheckbox, row++);
 
         return new CollapsibleSection("Animation", content);
@@ -304,12 +308,14 @@ public class WeaponVisualsPanel extends AbstractWeaponPropertiesPanel {
             if (cachedLayer != null && cachedLayer.getSpecFile() != null)
                 cachedLayer.getSpecFile().setRenderHints(value);
         });
+        renderHintsEditor.setToolTipText("Comma-separated render hints (e.g., RENDER_BARREL_BELOW, SUSPEND_RECOIL)");
         ComponentUtilities.addLabelAndComponent(content, new JLabel("Render Hints:"), renderHintsEditor, row++);
 
         displayArcRadiusEditor = createDoubleField(value -> {
             if (cachedLayer != null && cachedLayer.getSpecFile() != null)
                 cachedLayer.getSpecFile().setDisplayArcRadius(value);
         });
+        displayArcRadiusEditor.setToolTipText("Radius of the firing arc display (0 = default)");
         ComponentUtilities.addLabelAndComponent(content, new JLabel("Display Arc Radius:"), displayArcRadiusEditor, row++);
 
         return new CollapsibleSection("Misc", content, true);
@@ -409,6 +415,7 @@ public class WeaponVisualsPanel extends AbstractWeaponPropertiesPanel {
         colorChooserMenu.add(removeColor);
 
         label.addMouseListener(new MouseoverLabelListener(colorChooserMenu, label));
+        valueLabel.addMouseListener(new MouseoverLabelListener(colorChooserMenu, valueLabel));
         Insets insets = ComponentUtilities.createLabelInsets();
         insets.top = 1;
         label.setBorder(ComponentUtilities.createLabelSimpleBorder(insets));

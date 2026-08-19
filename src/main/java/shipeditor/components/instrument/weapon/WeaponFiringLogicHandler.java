@@ -15,22 +15,22 @@ public class WeaponFiringLogicHandler {
     private final JCheckBox unaffectedBySpeedBonusesCheckbox;
 
     public WeaponFiringLogicHandler(Supplier<Boolean> readinessChecker, Runnable onChange, Supplier<WeaponSpecFile> specSupplier) {
-        autochargeCheckbox = WeaponFirePanelUtilities.createCheckBox("Autocharge", readinessChecker, value -> {
+        autochargeCheckbox = WeaponFirePanelUtilities.createCheckBox("Autocharge", "Weapon charges automatically when not firing", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setAutocharge(value);
         }, onChange);
 
-        interruptibleBurstCheckbox = WeaponFirePanelUtilities.createCheckBox("Interruptible Burst", readinessChecker, value -> {
+        interruptibleBurstCheckbox = WeaponFirePanelUtilities.createCheckBox("Interruptible Burst", "Burst can be interrupted", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setInterruptibleBurst(value);
         }, onChange);
 
-        requiresFullChargeCheckbox = WeaponFirePanelUtilities.createCheckBox("Requires Full Charge", readinessChecker, value -> {
+        requiresFullChargeCheckbox = WeaponFirePanelUtilities.createCheckBox("Requires Full Charge", "Weapon must be fully charged to fire", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setRequiresFullCharge(value);
         }, onChange);
 
-        unaffectedBySpeedBonusesCheckbox = WeaponFirePanelUtilities.createCheckBox("Unaffected By Projectile Speed Bonuses", readinessChecker, value -> {
+        unaffectedBySpeedBonusesCheckbox = WeaponFirePanelUtilities.createCheckBox("Unaffected By Projectile Speed Bonuses", "Projectile speed is not affected by hull mods/skills", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setUnaffectedByProjectileSpeedBonuses(value);
         }, onChange);

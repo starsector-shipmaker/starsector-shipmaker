@@ -65,4 +65,9 @@ public final class DialogUtilities {
         return null;
     }
 
+    public static void showSlotCreationDialog() {
+        SlotCreationDialog dialog = new SlotCreationDialog(shipeditor.PrimaryWindow.getInstance());
+        dialog.setVisible(true);
+    }
+
 }

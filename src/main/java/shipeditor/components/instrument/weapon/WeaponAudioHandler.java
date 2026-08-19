@@ -19,37 +19,37 @@ public class WeaponAudioHandler {
     private final JCheckBox stopPreviousFireSoundCheckbox;
 
     public WeaponAudioHandler(Supplier<Boolean> readinessChecker, Runnable onChange, Supplier<WeaponSpecFile> specSupplier) {
-        fireSoundOneEditor = WeaponFirePanelUtilities.createTextField(readinessChecker, value -> {
+        fireSoundOneEditor = WeaponFirePanelUtilities.createTextField("ID of the primary sound played when the weapon fires (from sounds.json).", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setFireSoundOne(value);
         }, onChange);
 
-        fireSoundTwoEditor = WeaponFirePanelUtilities.createTextField(readinessChecker, value -> {
+        fireSoundTwoEditor = WeaponFirePanelUtilities.createTextField("ID of the secondary/looping sound played when the weapon fires (from sounds.json).", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setFireSoundTwo(value);
         }, onChange);
 
-        noImpactSoundsCheckbox = WeaponFirePanelUtilities.createCheckBox("No Impact Sounds", readinessChecker, value -> {
+        noImpactSoundsCheckbox = WeaponFirePanelUtilities.createCheckBox("No Impact Sounds", "Disables impact sounds when the projectile hits a target.", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setNoImpactSounds(value);
         }, onChange);
 
-        noShieldImpactSoundsCheckbox = WeaponFirePanelUtilities.createCheckBox("No Shield Impact Sounds", readinessChecker, value -> {
+        noShieldImpactSoundsCheckbox = WeaponFirePanelUtilities.createCheckBox("No Shield Impact Sounds", "Disables impact sounds when the projectile hits a shield.", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setNoShieldImpactSounds(value);
         }, onChange);
 
-        noNonShieldImpactSoundsCheckbox = WeaponFirePanelUtilities.createCheckBox("No Non-Shield Impact Sounds", readinessChecker, value -> {
+        noNonShieldImpactSoundsCheckbox = WeaponFirePanelUtilities.createCheckBox("No Non-Shield Impact Sounds", "Disables impact sounds when the projectile hits armor or hull (non-shield).", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setNoNonShieldImpactSounds(value);
         }, onChange);
 
-        playFullFireSoundOneCheckbox = WeaponFirePanelUtilities.createCheckBox("Play Full Fire Sound One", readinessChecker, value -> {
+        playFullFireSoundOneCheckbox = WeaponFirePanelUtilities.createCheckBox("Play Full Fire Sound One", "Ensures the primary fire sound plays completely, even if firing stops.", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setPlayFullFireSoundOne(value);
         }, onChange);
 
-        stopPreviousFireSoundCheckbox = WeaponFirePanelUtilities.createCheckBox("Stop Previous Fire Sound", readinessChecker, value -> {
+        stopPreviousFireSoundCheckbox = WeaponFirePanelUtilities.createCheckBox("Stop Previous Fire Sound", "Stops the previous fire sound when a new one starts (useful for fast-firing weapons).", readinessChecker, value -> {
             WeaponSpecFile spec = specSupplier.get();
             if (spec != null) spec.setStopPreviousFireSound(value);
         }, onChange);
@@ -57,8 +57,8 @@ public class WeaponAudioHandler {
 
     public int populate(JPanel panel, int startRow) {
         int row = startRow;
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Fire Sound One:"), fireSoundOneEditor, row++);
-        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Fire Sound Two:"), fireSoundTwoEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Fire Sound One ID:"), fireSoundOneEditor, row++);
+        ComponentUtilities.addLabelAndComponent(panel, new JLabel("Fire Sound Two ID:"), fireSoundTwoEditor, row++);
         ComponentUtilities.addLabelAndComponent(panel, new JLabel(), noImpactSoundsCheckbox, row++);
         ComponentUtilities.addLabelAndComponent(panel, new JLabel(), noShieldImpactSoundsCheckbox, row++);
         ComponentUtilities.addLabelAndComponent(panel, new JLabel(), noNonShieldImpactSoundsCheckbox, row++);

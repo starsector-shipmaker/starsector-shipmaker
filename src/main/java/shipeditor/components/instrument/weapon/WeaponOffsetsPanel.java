@@ -84,6 +84,7 @@ class WeaponOffsetsPanel extends JPanel {
 
         visualRecoilEditor = new JTextField();
         visualRecoilEditor.setColumns(10);
+        visualRecoilEditor.setToolTipText("Visual recoil distance in pixels");
         visualRecoilEditor.addActionListener(e -> {
             if (readyForInput && cachedLayer != null && cachedLayer.getSpecFile() != null) {
                 try {
@@ -97,6 +98,7 @@ class WeaponOffsetsPanel extends JPanel {
         ComponentUtilities.addLabelAndComponent(infoPanel, new JLabel("Visual Recoil:"), visualRecoilEditor, row++);
 
         separateRecoilCheckbox = new JCheckBox("Separate Recoil For Linked Barrels");
+        separateRecoilCheckbox.setToolTipText("Whether each barrel recoils independently");
         separateRecoilCheckbox.addActionListener(e -> {
             if (readyForInput && cachedLayer != null && cachedLayer.getSpecFile() != null) {
                 cachedLayer.getSpecFile().setSeparateRecoilForLinkedBarrels(separateRecoilCheckbox.isSelected());
@@ -129,6 +131,7 @@ class WeaponOffsetsPanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JButton addButton = new JButton("Add offset");
+        addButton.setToolTipText("Add a new firing offset point");
         addButton.addActionListener(e -> {
             if (cachedPainter == null) return;
             WeaponOffsetPainter offsetPainter = cachedPainter.getOffsetPainter();
@@ -140,6 +143,11 @@ class WeaponOffsetsPanel extends JPanel {
         });
 
         JButton removeButton = new JButton("Remove");
+        removeButton.setToolTipText("Remove selected firing offset point");
+        removeButton.setEnabled(false);
+        offsetsTable.getSelectionModel().addListSelectionListener(e -> {
+            removeButton.setEnabled(offsetsTable.getSelectedRow() >= 0);
+        });
         removeButton.addActionListener(e -> {
             if (cachedPainter == null) return;
             int selectedRow = offsetsTable.getSelectedRow();

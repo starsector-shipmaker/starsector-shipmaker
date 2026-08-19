@@ -196,20 +196,13 @@ final class SaveHullAction {
         result.setWidth(shipPainter.getSpriteWidth());
 
         HullStyle hullStyle = shipHull.getHullStyle();
-        if (hullStyle == null) {
-            String shipID = shipLayer.getShipID();
-            log.error("Hullstyle misconfiguration at hull serialization. Ship ID: {}",
-                    shipID);
-            JOptionPane.showMessageDialog(shipeditor.PrimaryWindow.getInstance(),
-                    "Hullstyle misconfiguration at hull serialization. " +
-                            "Ship ID: " + shipID,
-                    StringValues.FILE_SAVING_ERROR,
-                    JOptionPane.ERROR_MESSAGE);
-            return null;
+        String styleID = hullStyle != null ? hullStyle.getHullStyleID() : shipHull.getStyleID();
+        if (styleID == null || styleID.isEmpty()) {
+            styleID = StringConstants.LOW_TECH;
         }
-        result.setStyle(hullStyle.getHullStyleID());
+        result.setStyle(styleID);
         HullSize hullSize = shipHull.getHullSize();
-        result.setHullSize(hullSize.toString());
+        result.setHullSize(hullSize != null ? hullSize.toString() : HullSize.DEFAULT.toString());
 
         result.setSpriteName(shipLayer.getRelativeSpritePath());
 
@@ -255,21 +248,24 @@ final class SaveHullAction {
             serializableSlot.setLength(enginePoint.getLength());
             serializableSlot.setContrailSize(enginePoint.getContrailSize());
 
-            var engineStyle = enginePoint.getStyle();
-            if (engineStyle == null) {
-                var customStyleSpec = enginePoint.getCustomStyleSpec();
-                if (customStyleSpec != null) {
-                    serializableSlot.setStyle(StringConstants.CUSTOM);
-                    serializableSlot.setStyleSpec(customStyleSpec);
-                } else {
-                    return null;
-                }
+            String engineStyleID = enginePoint.getStyleID();
+            EngineStyle customStyleSpec = enginePoint.getCustomStyleSpec();
+            boolean isCustom = enginePoint.isStyleIsCustom();
+
+            if (isCustom && engineStyleID != null && !engineStyleID.isEmpty()) {
+                serializableSlot.setStyle(StringConstants.CUSTOM);
+                serializableSlot.setStyleId(engineStyleID);
+            } else if (customStyleSpec != null) {
+                serializableSlot.setStyle(StringConstants.CUSTOM);
+                serializableSlot.setStyleSpec(customStyleSpec);
+            } else if (engineStyleID != null && !engineStyleID.isEmpty()) {
+                serializableSlot.setStyle(engineStyleID);
             } else {
-                if (enginePoint.isStyleIsCustom()) {
-                    serializableSlot.setStyle(StringConstants.CUSTOM);
-                    serializableSlot.setStyleId(enginePoint.getStyleID());
+                var engineStyle = enginePoint.getStyle();
+                if (engineStyle != null && engineStyle.getEngineStyleID() != null) {
+                    serializableSlot.setStyle(engineStyle.getEngineStyleID());
                 } else {
-                    serializableSlot.setStyle(enginePoint.getStyleID());
+                    serializableSlot.setStyle(StringConstants.LOW_TECH);
                 }
             }
 
