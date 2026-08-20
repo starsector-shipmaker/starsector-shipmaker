@@ -42,3 +42,11 @@ This skill teaches agents how Starsector data files work and how the editor pars
 - Never save single-port bays without duplicating the coordinate
 - Always preserve raw string IDs for engine styles, don't resolve to objects
 - Odd number of values in `locations` array crashes the engine
+
+## Modding Edge Cases & Integrity Pitfalls
+- **Python JSON Parsers & Duplicate Keys**: Modders often copy-paste weapon slots, resulting in duplicate JSON keys (e.g. two `"WS 001"` in a `.variant`'s `weapons` block or `.ship`'s `builtInWeapons`). Python's default `json.loads` will silently overwrite/delete the first duplicate. This causes `org.json.JSONException` crashes in Starsector's strict engine. Always use strict parsing or custom string replacement when standardizing mod data.
+- **.skin File Traps**:
+  - `weaponSlotChanges` and `removeWeaponSlots` in `.skin` files reference the `baseHullId` slot IDs. If you standardize a base `.ship` file's IDs (e.g., `WS0001` -> `WS 001`), you MUST also update every `.skin` file that references it, or Starsector will throw a `NullPointerException` trying to `setArc()` on a null slot object.
+  - A `.variant` file's `hullId` can point to a `skinHullId` instead of a base `.ship` ID. Batch-processing scripts must trace `variant.hullId -> skinHullId -> baseHullId -> .ship` to safely validate slot IDs.
+- **Station Modding**: Multi-part stations (like boss encounters) use `.variant` files located in subdirectories like `data/variants/stations/` or `data/variants/drones/`. These are easily missed by flat-directory parsing scripts.
+- **Save-Game Ghost Data**: Modifying weapon slot IDs across a mod is completely save-breaking. Furthermore, Starsector heavily caches custom player variants in `saves/missions/` and `saves/common/`. A cached variant referencing an old slot ID can cause the Main Menu to instantly crash (`RuntimeException: Slot id [X] not found`) when the game attempts to render random background fleets. Wipe `saves/` when performing mod-wide structural refactors.
