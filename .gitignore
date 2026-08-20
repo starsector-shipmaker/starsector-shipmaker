@@ -102,3 +102,7 @@ env/
 ### AI ###
 .serena/
 .gemini/
+
+### Runtime ###
+.ship_editor.lock
+ship_editor_database.sqlite*
