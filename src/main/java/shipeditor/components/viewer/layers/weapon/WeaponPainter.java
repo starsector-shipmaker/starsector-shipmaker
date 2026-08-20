@@ -146,10 +146,28 @@ public class WeaponPainter extends LayerPainter {
             loadedProjectilePainters.remove(loadedProjectilePainters.size() - 1);
         }
 
+        double recoilOffset = 0.0;
+        ViewerLayer layer = getParentLayer();
+        if (layer instanceof WeaponLayer weaponLayer) {
+            shipeditor.representation.weapon.WeaponSpecFile spec = weaponLayer.getSpecFile();
+            if (spec != null) {
+                recoilOffset = spec.getVisualRecoil() * recoilPreviewFraction;
+            }
+        }
+        
+        Point2D.Double recoilVector = null;
+        if (recoilOffset > 0.001) {
+            recoilVector = calculateRecoilVector(recoilOffset);
+        }
+
         for (int i = 0; i < offsets.size(); i++) {
             OffsetPoint offsetPoint = offsets.get(i);
             ProjectilePainter painter = loadedProjectilePainters.get(i);
             Point2D ptPos = offsetPoint.getPosition();
+            
+            if (recoilVector != null) {
+                ptPos = new Point2D.Double(ptPos.getX() + recoilVector.getX(), ptPos.getY() + recoilVector.getY());
+            }
 
             painter.setPaintAnchor(ptPos);
             // Starsector recoils and orientates missiles along the weapon's angle plus the offset's angle.
@@ -212,7 +230,9 @@ public class WeaponPainter extends LayerPainter {
 
     private Point2D.Double calculateRecoilVector(double recoilOffset) {
         double rotRads = this.getRotationRadians();
-        return new Point2D.Double(-Math.cos(rotRads) * recoilOffset, -Math.sin(rotRads) * recoilOffset);
+        // Weapon's forward vector at 0 rotation is UP (0, -1). With positive CW rotation, 
+        // forward vector is (sin(rot), -cos(rot)). Recoil is opposite of forward.
+        return new Point2D.Double(-Math.sin(rotRads) * recoilOffset, Math.cos(rotRads) * recoilOffset);
     }
 
     private void drawSpritePartGL(SpriteRenderer spriteRenderer, Matrix4f projection, Matrix4f view, Sprite part, boolean additive) {

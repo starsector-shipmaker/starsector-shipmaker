@@ -51,7 +51,7 @@ public class ProjectilePainter implements OpenGLPainter {
         if (textureId == 0) return;
 
         double x = paintAnchor.getX() - projectileCenter.getX();
-        double y = paintAnchor.getY() - projectileCenter.getY();
+        double y = paintAnchor.getY() - (spriteDimensions.getHeight() - projectileCenter.getY());
 
         org.joml.Vector2f position = new org.joml.Vector2f((float) x, (float) y);
         org.joml.Vector2f size = new org.joml.Vector2f((float) spriteDimensions.getWidth(), (float) spriteDimensions.getHeight());
