@@ -27,3 +27,8 @@
 - **Undo/Redo**: Handled via `EditDispatch`.
 - **Coordinate transforms**: `rotatePointByCenter` (load) ↔ `SHIP_CENTER` mode (save).
 - **Initialization & Saving**: `ShipPainterInitialization` loads hull data, `SaveHullAction` serializes it back.
+
+## Mod Data Integrity Pitfalls
+1. **Duplicate Slot IDs**: Always check for duplicate slot IDs in arrays. The engine uses strict parsing, whereas scripting parsers (like Python's `json`) may silently overwrite duplicates, causing unexpected serialization drops in nested objects (like `builtInWeapons`).
+2. **.skin File Dependencies**: Changes to a `.ship` file's slot IDs break any `.skin` file that references them in `weaponSlotChanges`.
+3. **.variant Hull IDs**: A `.variant` file's `hullId` can point to either a base `.ship` ID or a `.skin` ID.
