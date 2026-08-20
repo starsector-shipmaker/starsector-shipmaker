@@ -122,7 +122,40 @@ This skill captures comprehensive knowledge, design patterns, and debugging solu
 
 ---
 
-## 8. Git & Mod Repository Management
+## 8. Nexerelin Campaign Integration
+
+To integrate custom faction mods with Nexerelin's 4X campaign and RPG mechanics, modders must interact with specific configurations and use "safe wrappers" to prevent crashes.
+
+### `exerelinFactionConfig` JSON Mechanics
+Create `<mod_folder>/data/config/exerelinFactionConfig/<faction_id>.json` to define your faction's role in the 4X map.
+* **`playableFaction` (boolean):** Must be `true` for players to select the faction on game start.
+* **`corvusCompatible` (boolean):** Must be `true` if this faction naturally exists in the vanilla sector map.
+* **`alignments`:** Maps ideological parameters (e.g. `technocratic`, `militarist`, `hierarchical`) from `-1` to `1` which governs alliance formations and base hostility.
+* **`diplomacyTraits`:** AI behavior descriptors like `"paranoid"` or `"law_and_order"` dictating how the faction handles diplomacy events.
+* **`colonyExpeditionChance`:** Controls NPC expansion rate for building new colonies.
+
+### Java Hooks (Custom Starts & Backgrounds)
+Modders can inject custom campaign RPG elements by extending Nexerelin classes:
+* **Custom Starts (`exerelin.campaign.customstart.CustomStart`):**
+  * Registered in `data/config/exerelin/customStarts.json`.
+  * Override `execute()` to configure the player's initial fleet (`NGCAddStartingShipsByFleetType`), set the faction (`PlayerFactionStore`), or execute lore text.
+* **Character Backgrounds (`exerelin.campaign.backgrounds.BaseCharacterBackground`):**
+  * Registered in `data/config/exerelin/character_backgrounds.csv` under the `plugin` column.
+
+### Safe Wrapper Pattern (Preventing Missing Mod Crashes)
+**CRITICAL:** Never import `exerelin.*` packages directly in your main `ModPlugin` or base scripts. Doing so causes a `NoClassDefFoundError` if the player launches Starsector without Nexerelin installed.
+1. **Check Status:** `boolean isNexEnabled = Global.getSettings().getModManager().isModEnabled("nexerelin");`
+2. **Wrapper Class:** Create a dedicated integration class (e.g., `MyNexIntegration.java`) where all Nexerelin imports (e.g., `SectorManager.getManager().isCorvusMode()`) live.
+3. **Conditional Invocation:** Only invoke methods from your wrapper class inside an `if (isNexEnabled)` block. Java's ClassLoader will not attempt to resolve the `exerelin` dependencies unless the block is executed.
+
+### Other Configurations (`data/config/exerelin/`)
+* **`corvus_spawnpoints.csv`:** Defines exactly where the faction spawns if Corvus Mode is turned on.
+* **`agent_steal_ship_config.csv`:** Whitelists/blacklists hulls that spies can steal.
+* **`mining_weapons.csv`:** Configures which ship weapons contribute to asteroid mining yield.
+
+---
+
+## 9. Git & Mod Repository Management
 
 * **Standard Mod `.gitignore`:**
   ```gitignore
