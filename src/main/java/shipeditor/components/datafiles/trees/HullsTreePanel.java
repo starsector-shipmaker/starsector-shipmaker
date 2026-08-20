@@ -364,11 +364,31 @@ public class HullsTreePanel extends DataTreePanel {
             setIcon(null);
             if (object instanceof shipeditor.persistence.database.IndexedFile file && leaf) {
                 ShipCSVEntry entry = SettingsManager.getGameData().getAllShipEntries().get(file.getEntityId());
+                String title;
                 if (entry != null) {
-                    setText(entry.toString());
+                    String baseName = entry.getShipName();
+                    if (baseName == null || baseName.isBlank()) {
+                        baseName = entry.toString();
+                    }
+                    String entityName = file.getEntityName();
+                    String entityId = file.getEntityId();
+
+                    if (entityName != null && !entityName.equalsIgnoreCase(baseName) && !entityName.equalsIgnoreCase(entityId)) {
+                        title = baseName + " (" + entityName + ")";
+                    } else if (entityId != null && !entityId.equalsIgnoreCase(baseName)) {
+                        title = baseName + " (" + entityId + ")";
+                    } else {
+                        title = baseName;
+                    }
+
+                    shipeditor.representation.RepresentationEnums.HullSize hullSize = entry.getSize();
+                    if (hullSize != null && hullSize != shipeditor.representation.RepresentationEnums.HullSize.DEFAULT) {
+                        title = "[" + hullSize.getDisplayedName() + "] " + title;
+                    }
                 } else {
-                    setText(file.getEntityName());
+                    title = file.getEntityName() != null ? file.getEntityName() : file.getEntityId();
                 }
+                setText(title);
             }
             return this;
         }

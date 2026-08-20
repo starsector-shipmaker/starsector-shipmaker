@@ -328,10 +328,13 @@ public class ShipCSVEntry implements LayerableEntry, InstallableEntry {
     @Override
     public String toString() {
         String displayedName = rowData.get(StringConstants.NAME);
-        if (displayedName == null || displayedName.isEmpty()) {
+        if (displayedName == null || displayedName.isBlank()) {
             displayedName = rowData.get(StringConstants.DESIGNATION);
         }
-        return displayedName != null ? displayedName : "Unknown Ship";
+        if (displayedName == null || displayedName.isBlank()) {
+            displayedName = this.hullID;
+        }
+        return (displayedName != null && !displayedName.isBlank()) ? displayedName : "Unknown Ship";
     }
 
     @SuppressWarnings("MethodWithMultipleReturnPoints")

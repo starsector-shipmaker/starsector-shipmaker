@@ -418,7 +418,12 @@ public final class DatabaseQueryService {
             return cached;
         }
 
-        List<IndexedFile> results = new ArrayList<>(CoreIndexManager.getFilesByType(type));
+        Map<String, IndexedFile> deduplicated = new LinkedHashMap<>();
+        for (IndexedFile coreFile : CoreIndexManager.getFilesByType(type)) {
+            if (coreFile != null && coreFile.getFilePath() != null) {
+                deduplicated.put(coreFile.getFilePath().toString(), coreFile);
+            }
+        }
 
         List<String> activeMods = getActiveModIds();
         if (!activeMods.isEmpty()) {
@@ -438,7 +443,10 @@ public final class DatabaseQueryService {
 
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        results.add(mapRowToIndexedFile(rs));
+                        IndexedFile file = mapRowToIndexedFile(rs);
+                        if (file != null && file.getFilePath() != null) {
+                            deduplicated.put(file.getFilePath().toString(), file);
+                        }
                     }
                 }
             } catch (SQLException e) {
@@ -446,6 +454,7 @@ public final class DatabaseQueryService {
             }
         }
 
+        List<IndexedFile> results = new ArrayList<>(deduplicated.values());
         typeCache.put(type, results);
         return results;
     }

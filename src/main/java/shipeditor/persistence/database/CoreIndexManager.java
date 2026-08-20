@@ -49,14 +49,18 @@ public class CoreIndexManager {
             return;
         }
 
-        long startTime = System.currentTimeMillis();
+            coreFilesByType.clear();
+            coreFilesByEntityId.clear();
+            coreFilesByPath.clear();
 
-        // Check if we can load from the database instead of re-scanning.
-        if (tryLoadFromDatabase(coreFolder)) {
-            isLoaded = true;
-            log.info("Core memory index loaded from database cache in {}ms", System.currentTimeMillis() - startTime);
-            return;
-        }
+            long startTime = System.currentTimeMillis();
+
+            // Check if we can load from the database instead of re-scanning.
+            if (tryLoadFromDatabase(coreFolder)) {
+                isLoaded = true;
+                log.info("Core memory index loaded from database cache in {}ms", System.currentTimeMillis() - startTime);
+                return;
+            }
 
         log.info("Scanning starsector-core into memory index...");
 
