@@ -168,7 +168,7 @@ public class LaunchPortPoint extends BaseWorldPoint implements SlotPoint {
 
     public String getIndexToDisplay() {
         List<LaunchPortPoint> portPoints = parentBay.getPortPoints();
-        return "#" + portPoints.indexOf(this);
+        return String.valueOf(portPoints.indexOf(this));
     }
 
 }

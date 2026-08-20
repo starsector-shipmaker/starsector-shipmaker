@@ -32,7 +32,7 @@ public class LaunchBay implements SlotData {
     private int renderOrderMod;
 
     @Setter
-    private double arc;
+    private double arc = 360.0;
 
     @Setter
     private double angle;

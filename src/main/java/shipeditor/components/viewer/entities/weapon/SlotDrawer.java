@@ -43,6 +43,8 @@ public class SlotDrawer {
 
     private boolean drawAngle = true;
 
+    private boolean drawMount = true;
+
     // Pre-allocated rendering caches to prevent per-frame object allocation
     private final Point2D p0Screen = new Point2D.Double();
     private final Point2D p1Screen = new Point2D.Double();
@@ -136,7 +138,9 @@ public class SlotDrawer {
         Point2D centerScreenPoint = worldToScreen.transform(position, centerScreen);
         centerGl.set((float) centerScreenPoint.getX(), (float) centerScreenPoint.getY());
 
-        this.drawMountShapeGL(shapeRenderer, worldToScreen, wtsScale, centerGl, circleRadius, enlargedRadius, colorGl, blackGl);
+        if (drawMount) {
+            this.drawMountShapeGL(shapeRenderer, worldToScreen, wtsScale, centerGl, circleRadius, enlargedRadius, colorGl, blackGl);
+        }
 
         if (drawArc) {
             this.drawArcGL(shapeRenderer, worldToScreen, wtsScale, centerGl, circleRadius, colorGl, blackGl, alpha);

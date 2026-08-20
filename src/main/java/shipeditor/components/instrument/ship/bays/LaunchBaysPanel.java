@@ -53,7 +53,7 @@ public class LaunchBaysPanel extends AbstractShipPropertiesPanel {
         EventBus.subscribe(this, event -> {
             if (event instanceof InstrumentRepaintQueued checked) {
                 if (checked.editorMode() == EditorInstrument.LAUNCH_BAYS) {
-                    this.baysTree.reloadModel();
+                    this.baysTree.repaint();
                     this.refreshPointDataPane(null);
                 }
             }

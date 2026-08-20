@@ -101,7 +101,7 @@ public class LaunchBayPainter extends MirrorablePointPainter {
 
     public String generateUniqueBayID() {
         ShipPainter parentLayer = (ShipPainter) getParentLayer();
-        return parentLayer.generateUniqueSlotID("LB");
+        return parentLayer.generateUniqueSlotID("WS");
     }
 
     private void initHotkeys() {
@@ -249,7 +249,44 @@ public class LaunchBayPainter extends MirrorablePointPainter {
         Point2D finalWorldCursor = StaticController.getFinalWorldCursor();
         WorldPoint selected = this.getSelected();
         PrimaryViewer viewer = StaticController.getViewer();
-        if (selected != null && viewer.isCursorInViewer()) {
+
+        // Draw connections between ports of the same bay and arc/angle visuals
+        for (LaunchBay bay : this.baysList) {
+            List<LaunchPortPoint> ports = bay.getPortPoints();
+            if (ports.isEmpty()) continue;
+
+            boolean hasSelectedPort = selected instanceof LaunchPortPoint && ((LaunchPortPoint) selected).getParentBay() == bay;
+
+            // Draw connection lines
+            if (ports.size() > 1) {
+                org.lwjgl.opengl.GL11.glLineWidth(2.0f);
+                for (int i = 0; i < ports.size() - 1; i++) {
+                    Point2D p1 = worldToScreen.transform(ports.get(i).getPosition(), null);
+                    Point2D p2 = worldToScreen.transform(ports.get(i + 1).getPosition(), null);
+                    org.joml.Vector2f start = new org.joml.Vector2f((float) p1.getX(), (float) p1.getY());
+                    org.joml.Vector2f end = new org.joml.Vector2f((float) p2.getX(), (float) p2.getY());
+                    
+                    org.joml.Vector4f color = hasSelectedPort ? new org.joml.Vector4f(1.0f, 0.5f, 0.0f, 1.0f) : new org.joml.Vector4f(0.5f, 0.5f, 0.5f, 0.7f);
+                    shapeRenderer.drawLine(start, end, color);
+                }
+                org.lwjgl.opengl.GL11.glLineWidth(GraphicConstants.LINE_WIDTH_DEFAULT);
+            }
+
+            // Draw direction arrow and arc for the bay (centered on the first port)
+            Point2D firstPort = ports.get(0).getPosition();
+            
+            shipeditor.components.viewer.entities.weapon.SlotDrawer drawer = new shipeditor.components.viewer.entities.weapon.SlotDrawer(null);
+            drawer.setPointPosition(firstPort);
+            drawer.setType(bay.getWeaponType());
+            drawer.setMount(bay.getWeaponMount());
+            drawer.setSize(bay.getWeaponSize());
+            drawer.setAngle(bay.getAngle());
+            drawer.setArc(bay.getArc());
+            drawer.setDrawMount(false);
+            drawer.paintSlotVisuals(spriteRenderer, shapeRenderer, projection, view);
+        }
+
+        if (selected != null && viewer.isCursorInViewer() && addPortHotkeyPressed) {
             Point2D startScreen = worldToScreen.transform(selected.getPosition(), null);
             Point2D endScreen = worldToScreen.transform(finalWorldCursor, null);
             org.joml.Vector2f start = new org.joml.Vector2f((float) startScreen.getX(), (float) startScreen.getY());

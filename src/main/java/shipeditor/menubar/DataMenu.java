@@ -93,6 +93,14 @@ class DataMenu extends JMenu {
             dialog.setVisible(true);
         });
         this.add(qaReport);
+
+        JMenuItem hullQaReport = new JMenuItem("Hull QA Report...");
+        hullQaReport.setIcon(FontIcon.of(BoxiconsRegular.SHIELD_QUARTER, 16, Themes.getIconColor()));
+        hullQaReport.addActionListener(event -> {
+            shipeditor.utility.components.dialog.HullQAReportDialog dialog = new shipeditor.utility.components.dialog.HullQAReportDialog();
+            dialog.setVisible(true);
+        });
+        this.add(hullQaReport);
     }
 
     private static JMenuItem getJSONCorrector() {

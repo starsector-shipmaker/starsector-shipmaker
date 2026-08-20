@@ -1,8 +1,22 @@
 # Changelog
 
-## [0.0.1f-hf] (Pre-release) - 2026-08-19
+## [0.0.1f-hf] (Pre-release) - 2026-08-20
+
+### Bug Fixes (Critical)
+- **Fix fighters spawning from ship center**: Starsector interprets the first coordinate pair in a LAUNCH_BAY's `locations` array as the bay's logical center, subsequent pairs as spawn ports. Single-port bays wrote `[x, y]` which gave the engine 0 spawn ports, causing center-spawn fallback. Fix: duplicate the coordinate for single-port bays (`[x, y, x, y]`).
+- **Fix Launch Bay ID prefix**: Changed default bay ID generation from `LB` prefix to standard `WS` prefix. The engine requires `WS` for all weapon slots including launch bays.
+- **Fix default Launch Bay arc**: Changed default arc from `0.0` to `360.0` degrees, matching vanilla carrier standards.
+- **Fix engine style serialization crash**: `SaveHullAction` now falls back to raw `styleID` strings when the resolved engine style object is unavailable.
+
+### UI/UX Improvements
+- **Launch Bay tree stability**: Tree no longer collapses during port drag (use `repaint()` instead of `reloadModel()`).
+- **Port label cleanup**: Removed redundant `#` from port labels.
+- **Weapon UI polish**: Added missing tooltips, fixed duplicate headers, resized awkward dialogs, added Clear Filters button.
 
 ### Features
+- **Hull QA Report Dialog**: New validation tool checking for degenerate arcs (<=0), orphaned bays without ports, duplicate slot IDs, and ports positioned at ship center (0,0). Accessible from Data menu.
+- **Launch Bay canvas visualization**: Draw connection lines between ports of the same bay. Arc cone and direction arrow rendering via SlotDrawer.
+- **Slot Creation Dialog**: Refactored weapon slot creation defaults into a dedicated modal popup.
 - **Showcase Generator**: Add export showcase image generation tool with mod filtering, responsive font scaling, label truncation, and optimized grid layout.
 - **Weapon Offset QA**: Add a weapon offset QA report dialog to detect mismatched or asymmetrical barrel placements.
 - **Sprite Outline Tracer**: Implement a sprite outline tracer for accurate UI highlighting along with comprehensive regression tests.

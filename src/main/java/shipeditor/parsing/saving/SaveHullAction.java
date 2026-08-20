@@ -363,6 +363,9 @@ final class SaveHullAction {
             });
 
             Point2D.Double[] locations = portPositions.toArray(new Point2D.Double[0]);
+            if (locations.length == 1) {
+                locations = new Point2D.Double[]{locations[0], locations[0]};
+            }
             serializableSlot.setLocations(locations);
 
             int renderOrderMod = launchBay.getRenderOrderMod();
