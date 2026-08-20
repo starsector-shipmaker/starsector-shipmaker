@@ -73,42 +73,43 @@ CREATE INDEX IF NOT EXISTS idx_entity_type ON indexed_files(entity_type);
 
 ---
 
-## 3. Connection Management (Quirk: No Pooling)
+## 3. Connection Management (HikariCP Pooling & WAL)
 
 ```java
 public static Connection getConnection() throws SQLException {
-    Class.forName("org.sqlite.JDBC");
-    String dbUrl = "jdbc:sqlite:" + path + "?busy_timeout=5000";
-    Connection conn = DriverManager.getConnection(dbUrl);
-    // PRAGMAs applied per-connection
-    stmt.execute("PRAGMA foreign_keys = ON;");
-    stmt.execute("PRAGMA synchronous = NORMAL;");
-    stmt.execute("PRAGMA cache_size = -64000;");   // 64 MB page cache
-    stmt.execute("PRAGMA temp_store = MEMORY;");
-    return conn;
+    if (dataSource == null) {
+        initDataSource();
+    }
+    return dataSource.getConnection();
 }
 ```
 
-There is **no connection pool**. Every `getConnection()` call opens a fresh connection, applies PRAGMAs, and returns it. Connections are closed via try-with-resources at call sites.
+The database utilizes **HikariCP** (`HikariDataSource`) connection pooling (`SQLite-Pool` with maximum pool size 10) configured with SQLite PRAGMAs:
+- `PRAGMA foreign_keys = ON;`
+- `PRAGMA journal_mode = WAL;` (Write-Ahead Logging for non-blocking concurrent reads during indexing)
+- `PRAGMA synchronous = NORMAL;`
+- `PRAGMA cache_size = -64000;` (64 MB page cache)
+- `PRAGMA temp_store = MEMORY;`
+- `busyTimeout = 5000;`
 
-### PRAGMA Rationale
-| PRAGMA | Value | Why |
-|---|---|---|
-| `foreign_keys` | `ON` | Enforce `ON DELETE CASCADE` from `mods` → `indexed_files` |
-| `synchronous` | `NORMAL` | Faster writes than `FULL`, acceptable crash risk (data is rebuildable from disk) |
-| `cache_size` | `-64000` | Negative value = KB. 64 MB page cache for fast repeated queries |
-| `temp_store` | `MEMORY` | Temp tables/indexes in RAM, not disk |
-| `journal_mode` | `WAL` | Set during `initializeDatabase()` only. Enables concurrent reads during writes |
-| `busy_timeout` | `5000` | 5-second wait on locked database before failing (URL parameter) |
-
-### Quirk: `Class.forName("org.sqlite.JDBC")`
-The JDBC driver is loaded reflectively on every connection. This is technically redundant with JDBC 4.0+ auto-loading, but exists as a safety net because the JPMS module system can interfere with service provider discovery.
-
-### Quirk: Path Backslash Replacement
+### Path Forward-Slash Normalization
 ```java
-getDatabaseFilePath().toAbsolutePath().toString().replace("\\", "/")
+"jdbc:sqlite:" + getDatabaseFilePath().toAbsolutePath().toString().replace("\\", "/")
 ```
-SQLite's JDBC URL requires forward slashes even on Windows. The backslash replacement prevents `jdbc:sqlite:C:\Users\...` from being misinterpreted.
+SQLite JDBC URLs require forward slashes even on Windows to prevent path escape errors.
+
+---
+
+## 4. In-Memory Core Index & Query Deduplication
+
+### `CoreIndexManager`
+- Manages an in-memory cache of `starsector-core` files so that core data remains accessible instantly without full SQLite round-trips.
+- **Cache Accumulation Safeguard**: All collections (`coreFilesByType`, `coreFilesByEntityId`, `coreFilesByPath`) must be cleared at the start of `loadCoreData()` under `synchronized (LOCK)` before loading from DB cache or scanning from disk.
+
+### `DatabaseQueryService.getFilesByType`
+- Merges results from `CoreIndexManager` and active mods querying the SQLite database.
+- Results are deduplicated by canonical file path (`LinkedHashMap<String, IndexedFile>`) to prevent duplicate entries from appearing in UI tree components.
+
 
 ---
 

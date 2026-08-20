@@ -14,12 +14,13 @@
 6. **Engine style serialization**: Always use raw `styleID` strings, never rely on resolved style objects.
 
 ## Build & Test
-- `mvn compile` - Verify changes (compilation)
+- **CRITICAL BUILD RULE:** Always use `mvn package -DskipTests` instead of `mvn compile` for builds and verification to ensure complete shader/dependency packaging.
 - `mvn test` - Run full test suite
 - `mvn package -DskipTests` - Create release JAR
 
 ## GitHub Operations
 - Use `gh` CLI for GitHub interactions.
+- Central skills repository: `starsector-mods/skills`.
 - If auth fails, use `env -u GITHUB_TOKEN git push`.
 
 ## Architecture Quick Reference
@@ -27,8 +28,20 @@
 - **Undo/Redo**: Handled via `EditDispatch`.
 - **Coordinate transforms**: `rotatePointByCenter` (load) ↔ `SHIP_CENTER` mode (save).
 - **Initialization & Saving**: `ShipPainterInitialization` loads hull data, `SaveHullAction` serializes it back.
+- **OpenGL Weapon & Missile Rendering**:
+  - Weapon recoil direction: In editor space (0° pointing UP), recoil vector is `(-Math.sin(rotRads), Math.cos(rotRads)) * recoilOffset` (recoiling DOWN into the hardpoint/mount).
+  - Missile center anchor: Starsector `.proj` files define projectile centers from bottom-left; invert Y coordinate (`spriteHeight - projectileCenter.getY()`) to pivot by nozzle.
+  - Loaded missile animation: When rendering missiles inside launchers in `WeaponPainter.paintLoadedMissilesGL`, add the launcher's `recoilVector` to the missile's `paintAnchor` so missiles move synchronously with the recoil.
+- **Database & Memory Indexing**:
+  - `CoreIndexManager`: In-memory index of `starsector-core` data. Collections must be cleared at the start of `loadCoreData()` to prevent memory cache accumulation.
+  - `DatabaseQueryService`: SQLite layer using HikariCP (`SQLite-Pool`) and WAL mode. `getFilesByType` deduplicates entries by canonical file path.
+  - `HullsTreePanel`: Tree cell renderer prefixes hull size `[Frigate]`, `[Destroyer]`, `[Cruiser]`, `[Capital]` and displays entity ID/name for duplicate base names. Empty names fall back to `hullID`.
 
 ## Mod Data Integrity Pitfalls
 1. **Duplicate Slot IDs**: Always check for duplicate slot IDs in arrays. The engine uses strict parsing, whereas scripting parsers (like Python's `json`) may silently overwrite duplicates, causing unexpected serialization drops in nested objects (like `builtInWeapons`).
 2. **.skin File Dependencies**: Changes to a `.ship` file's slot IDs break any `.skin` file that references them in `weaponSlotChanges`.
 3. **.variant Hull IDs**: A `.variant` file's `hullId` can point to either a base `.ship` ID or a `.skin` ID.
+4. **Java 17 Bytecode Requirement**: Starsector 0.98a runs OpenJDK 17 LTS. All mod JARs must target bytecode version 61.0 (`--release 17`). Ignore misleading "Java 7" error messages caused by JDK 21+ bytecode.
+5. **Weapon Barrel Balance**: Burst sizes in `weapon_data.csv` must not exceed physical launch tube / barrel counts from `.wpn` offsets.
+6. **Skin OP Standardization**: Buffed faction skins add +5/+10/+15/+20 OP by hull size; pirate/scavenged skins apply a flat -10% OP delta.
+

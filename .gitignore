@@ -81,6 +81,7 @@ spotbugs/
 
 ### Archives & Releases ###
 *.zip
+*.rpm
 releases/
 
 ### JRE Distributions ###
