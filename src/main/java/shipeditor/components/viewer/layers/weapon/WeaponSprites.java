@@ -62,7 +62,9 @@ public class WeaponSprites {
 
     static Point2D getSpriteCenterDifference(RenderedImage sprite, WeaponMount mount) {
         final float centerRatio = 0.5f;
-        return new Point2D.Double(sprite.getWidth() * centerRatio, sprite.getHeight() * centerRatio);
+        // Starsector engine uses height/4 from bottom as hardpoint pivot (height * 0.75 in top-down space).
+        float yRatio = (mount == WeaponMount.HARDPOINT) ? 0.75f : centerRatio;
+        return new Point2D.Double(sprite.getWidth() * centerRatio, sprite.getHeight() * yRatio);
     }
 
     Point2D getWeaponCenter(WeaponMount mount) {
