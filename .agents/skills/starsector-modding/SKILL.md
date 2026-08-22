@@ -180,3 +180,42 @@ Modders can inject custom campaign RPG elements by extending Nexerelin classes:
   starsector.log*
   ```
 * **GitHub Organization:** Host mod repositories under the [`starsector-mods`](https://github.com/starsector-mods) GitHub organization as private or public repositories.
+
+---
+
+## 10. Weapon & Missile Sprite Rendering Engine Internals
+
+These rules were discovered by decompiling `starfarer_obf.jar` (class `com.fs.starfarer.combat.entities.ship.A.ooOO` and `com.fs.starfarer.combat.entities.Missile`).
+
+### Hardpoint vs Turret Sprite Pivot
+The engine sets different Y-axis pivot points depending on mount type:
+```java
+if (slot.isHardpoint()) {
+    sprite.setCenter(sprite.getWidth() / 2.0f, sprite.getHeight() / 4.0f);
+} else {
+    sprite.setCenter(sprite.getWidth() / 2.0f, sprite.getHeight() / 2.0f);
+}
+```
+* **Turret / Hidden:** Pivot at exact geometric center `(width/2, height/2)`.
+* **Hardpoint:** Pivot at `(width/2, height/4)` — 1/4 from the bottom of the sprite. This makes the weapon visually protrude forward 3/4 of its height from the slot coordinate, giving hardpoints their characteristic recessed-in-hull look.
+* **For editor rendering (top-down Y-axis):** Convert `height/4 from bottom` to `height * 0.75 from top`.
+
+### Missile Sprite Scaling & Center Anchor
+The engine scales loaded missile sprites to the `.proj` file's `"size"` field, NOT the raw image pixel dimensions:
+```java
+// From Missile.createSprite():
+sprite.setCenter(center.x, center.y);   // Raw .proj "center" values
+sprite.setSize(size.x, size.y);          // Scales to .proj "size" values
+sprite.renderAtCenter(offsetX, offsetY); // Renders at barrel offset point
+```
+* **`"size": [w, h]`** — The engine renders the missile sprite at these dimensions (scaling the PNG texture).
+* **`"center": [x, y]`** — The pivot/anchor point, relative to the `"size"` dimensions (bottom-left origin). NOT relative to the raw image pixel dimensions.
+* **Example:** Harpoon missile has `"size": [10, 22]`, `"center": [5, 12]`, but the actual PNG is 12×26 pixels. The engine scales to 10×22 and pivots at `(5, 12)` within that scaled space.
+
+### Loaded Missile Rendering in Launcher Barrels
+When a weapon has `RENDER_LOADED_MISSILES` or `RENDER_LOADED_MISSILES_UNLESS_HIDDEN` in its `renderHints`:
+1. One missile sprite is created per barrel (offset point count).
+2. Each missile is positioned at the barrel's fire offset point (transformed by weapon facing and mount position).
+3. Missile facing = `weaponFacing + angleOffset - 90°` (the -90° converts from sprite-up to combat-facing).
+4. Reload fade: missiles fade in during the last portion of the refire delay cycle.
+

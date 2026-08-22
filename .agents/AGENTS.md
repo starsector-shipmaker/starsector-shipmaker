@@ -30,7 +30,8 @@
 - **Initialization & Saving**: `ShipPainterInitialization` loads hull data, `SaveHullAction` serializes it back.
 - **OpenGL Weapon & Missile Rendering**:
   - Weapon recoil direction: In editor space (0° pointing UP), recoil vector is `(-Math.sin(rotRads), Math.cos(rotRads)) * recoilOffset` (recoiling DOWN into the hardpoint/mount).
-  - Missile center anchor: Starsector `.proj` files define projectile centers from bottom-left; invert Y coordinate (`spriteHeight - projectileCenter.getY()`) to pivot by nozzle.
+  - Hardpoint sprite pivot: Engine uses `setCenter(width/2, height/4)` for hardpoints vs `(width/2, height/2)` for turrets. In editor top-down space, hardpoint Y-ratio is `0.75` (not `0.5`).
+  - Missile sprite scaling: Engine calls `sprite.setSize(size.x, size.y)` using the `.proj` `"size"` field, then `sprite.setCenter(center.x, center.y)` using `.proj` `"center"`. The center is relative to the `"size"` dimensions (bottom-left origin), NOT the raw image pixel dimensions. Use `spriteDimensions` (from `.proj` size) for both draw size and Y-flip pivot in `ProjectilePainter`.
   - Loaded missile animation: When rendering missiles inside launchers in `WeaponPainter.paintLoadedMissilesGL`, add the launcher's `recoilVector` to the missile's `paintAnchor` so missiles move synchronously with the recoil.
 - **Database & Memory Indexing**:
   - `CoreIndexManager`: In-memory index of `starsector-core` data. Collections must be cleared at the start of `loadCoreData()` to prevent memory cache accumulation.

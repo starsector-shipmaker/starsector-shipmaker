@@ -50,14 +50,19 @@ public class ProjectilePainter implements OpenGLPainter {
         int textureId = projectileSprite.getTextureId();
         if (textureId == 0) return;
 
-        double spriteWidth = projectileSprite.getImage().getWidth();
-        double spriteHeight = projectileSprite.getImage().getHeight();
+        // Engine calls sprite.setSize(size.x, size.y) and sprite.setCenter(center.x, center.y)
+        // where both 'size' and 'center' come from the .proj file. The center is relative to the
+        // scaled size, NOT the raw image pixel dimensions.
+        double renderWidth = spriteDimensions.getWidth();
+        double renderHeight = spriteDimensions.getHeight();
 
+        // Y-flip: engine uses bottom-left origin, editor uses top-left.
+        // center.y from bottom-left = (renderHeight - center.y) from top-left.
         double x = paintAnchor.getX() - projectileCenter.getX();
-        double y = paintAnchor.getY() - (spriteHeight - projectileCenter.getY());
+        double y = paintAnchor.getY() - (renderHeight - projectileCenter.getY());
 
         org.joml.Vector2f position = new org.joml.Vector2f((float) x, (float) y);
-        org.joml.Vector2f size = new org.joml.Vector2f((float) spriteWidth, (float) spriteHeight);
+        org.joml.Vector2f size = new org.joml.Vector2f((float) renderWidth, (float) renderHeight);
         org.joml.Vector2f rotationAnchor = new org.joml.Vector2f((float) paintAnchor.getX(), (float) paintAnchor.getY());
         float rotation = (float) this.getRotationRadians();
         float opacity = this.getSpriteOpacity();
