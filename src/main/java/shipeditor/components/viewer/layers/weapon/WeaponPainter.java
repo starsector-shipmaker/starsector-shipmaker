@@ -328,4 +328,10 @@ public class WeaponPainter extends LayerPainter {
         return new Point2D.Double(anchor.getX() + weaponCenter.getX(), anchor.getY() + weaponCenter.getY());
     }
 
+    public Point2D getSpecificRotationAnchor(WeaponMount specificMount) {
+        Point2D anchor = this.getAnchor();
+        Point2D weaponCenter = weaponSprites.getWeaponCenter(specificMount);
+        return new Point2D.Double(anchor.getX() + weaponCenter.getX(), anchor.getY() + weaponCenter.getY());
+    }
+
 }
